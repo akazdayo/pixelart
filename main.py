@@ -2,11 +2,19 @@ import cv2
 from PIL import Image
 import numpy as np
 
+
+def mosaic(src, ratio=0.1):
+    small = cv2.resize(src, None, fx=ratio, fy=ratio, interpolation=cv2.INTER_NEAREST)
+    return cv2.resize(small, src.shape[:2][::-1], interpolation=cv2.INTER_NEAREST)
+
+
 file_name = 'img.png'
-pic = cv2.imread(file_name)
+pic = cv2.imread('data/sample/'+file_name)
 h, w = pic.shape[:2]
 pic = cv2.cvtColor(pic, cv2.COLOR_BGR2RGB)
+pic = mosaic(src=pic)
 RGB = [[], [], []]
+
 
 
 def detect_color(rgb):
@@ -22,9 +30,9 @@ def detect_color(rgb):
     y = 0.2126 * r + 0.7152 * g + 0.0722 * b
     
     # 輝度が一定の値以下であれば黒と判定し、一定の値以上であれば白と判定します。
-    if y <= 0.1:
+    if y <= 0.1:#black
         return [0,0,0]
-    elif y >= 0.9:
+    elif y >= 0.8:#white
         return [255,255,255]
     
     # 以下の処理は、色相（Hue）と彩度（Saturation）を計算する部分です。
@@ -45,8 +53,8 @@ def detect_color(rgb):
             h = (r - g) / delta + 4
         
         s = delta / (1 - abs(2 * l - 1))
-    
         if s < 0.1:#gray
+            #return [255,255,255]
             return [228,229,227]
         elif h < 1:#red
             return [255,127,127]
@@ -56,10 +64,10 @@ def detect_color(rgb):
             return [255,255,127]
         elif h < 4:#green
             return [127,255,127]
-        elif h < 5:#blue
-            return [127,127,255]
-        elif h < 6:#purle
-            return [191,127,255]
+        elif h < 5.5 and h >= 4.5:  # purple
+            return [191, 127, 255]
+        elif h < 2.5 and h >= 0.5:  # blue
+            return [127, 127, 255]
     
     return [0,0,0]
 
@@ -73,14 +81,6 @@ for k in range(3):
         for i in range(w):
             RGB[k].append(str(array[j, i]))
 
-"""
-for i in range(3):
-    for j in range(h*w):
-        if int(RGB[i][j]) >= 128:
-            RGB[i][j] = 255
-        else:
-            RGB[i][j] = 0
-"""
 
 for i in range(h*w):
     color = detect_color(rgb=[int(RGB[0][i]),int(RGB[1][i]),int(RGB[2][i])])
@@ -108,4 +108,4 @@ for k in range(3):
 image = Image.fromarray(array)
 
 # 画像を保存する
-image.save('restored.png')
+image.save("data/converted/"+file_name + ".png")
