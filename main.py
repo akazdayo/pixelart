@@ -127,7 +127,6 @@ class Web():
         my_bar = st.progress(0)
         my_bar.text(i)
         percent_complete = 0
-        percent = (h*w) / 100
         for i in range(h*w):
             image = self.converter.generate(img=image, count=i)
             percent_complete += 1
