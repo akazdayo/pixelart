@@ -8,11 +8,11 @@ def mosaic(src, ratio=0.1):
     return cv2.resize(small, src.shape[:2][::-1], interpolation=cv2.INTER_NEAREST)
 
 
-file_name = 'img.png'
+file_name = 'rabosann.png'
 pic = cv2.imread('data/sample/'+file_name)
 h, w = pic.shape[:2]
 pic = cv2.cvtColor(pic, cv2.COLOR_BGR2RGB)
-pic = mosaic(src=pic)
+pic = mosaic(src=pic,ratio=0.5)
 RGB = [[], [], []]
 
 
@@ -90,12 +90,12 @@ for i in range(h*w):
     RGB[2][i] = color[2]
 
     
-
+"""debug用
 color = detect_color(rgb=[int(RGB[0][33101]),int(RGB[1][33101]),int(RGB[2][33101])])
 print(str(RGB[0][33101])+":"+str(RGB[1][33101])+":"+str(RGB[2][33101]))
 
 print(color)
-
+"""
 # RGBリストをNumPy配列に変換する
 array = np.zeros((h, w, 3), dtype=np.uint8)
 for k in range(3):
