@@ -1,41 +1,51 @@
 import cv2
 from PIL import Image
 import numpy as np
+import streamlit as st
 
-file_name = 'img.png'
+
+def mosaic(src, ratio=0.1):
+    small = cv2.resize(src, None, fx=ratio, fy=ratio, interpolation=cv2.INTER_NEAREST)
+    return cv2.resize(small, src.shape[:2][::-1], interpolation=cv2.INTER_NEAREST)
+
+
+file_name = 'data/img/dango.png'
 pic = cv2.imread(file_name)
 h, w = pic.shape[:2]
 pic = cv2.cvtColor(pic, cv2.COLOR_BGR2RGB)
+pic = mosaic(src=pic)
 RGB = [[], [], []]
+
+st.title("PixelArt-Converter")
 
 
 def detect_color(rgb):
     # RGB値の各要素を変数に格納します。
     r, g, b = rgb[0], rgb[1], rgb[2]
-    
+
     # RGB値を0~1の範囲に変換します。
     r /= 255
     g /= 255
     b /= 255
-    
+
     # RGB値の輝度（明度）を計算します。
     y = 0.2126 * r + 0.7152 * g + 0.0722 * b
-    
+
     # 輝度が一定の値以下であれば黒と判定し、一定の値以上であれば白と判定します。
     if y <= 0.1:
-        return [0,0,0]
+        return [0, 0, 0]
     elif y >= 0.9:
-        return [255,255,255]
-    
+        return [255, 255, 255]
+
     # 以下の処理は、色相（Hue）と彩度（Saturation）を計算する部分です。
     cmax = max(r, g, b)
     cmin = min(r, g, b)
     delta = cmax - cmin
-    
+
     h = 0
     s = 0
     l = (cmax + cmin) / 2
-    
+
     if delta != 0:
         if cmax == r:
             h = (g - b) / delta % 6
@@ -43,28 +53,25 @@ def detect_color(rgb):
             h = (b - r) / delta + 2
         elif cmax == b:
             h = (r - g) / delta + 4
-        
+
         s = delta / (1 - abs(2 * l - 1))
-    
-        if s < 0.1:#gray
-            return [228,229,227]
-        elif h < 1:#red
-            return [255,127,127]
-        elif h < 2:#orange
-            return [255,191,127]
-        elif h < 3:#yellow
-            return [255,255,127]
-        elif h < 4:#green
-            return [127,255,127]
-        elif h < 5:#blue
-            return [127,127,255]
-        elif h < 6:#purle
-            return [191,127,255]
-    
-    return [0,0,0]
 
+        if s < 0.1:  # gray
+            return [228, 229, 227]
+        elif h < 1:  # red
+            return [255, 127, 127]
+        elif h < 2:  # orange
+            return [255, 191, 127]
+        elif h < 3:  # yellow
+            return [255, 255, 127]
+        elif h < 4:  # green
+            return [127, 255, 127]
+        elif h < 5:  # blue
+            return [127, 127, 255]
+        elif h < 6:  # purle
+            return [191, 127, 255]
 
-
+    return [0, 0, 0]
 
 
 for k in range(3):
@@ -73,25 +80,22 @@ for k in range(3):
         for i in range(w):
             RGB[k].append(str(array[j, i]))
 
-"""
-for i in range(3):
-    for j in range(h*w):
-        if int(RGB[i][j]) >= 128:
-            RGB[i][j] = 255
-        else:
-            RGB[i][j] = 0
-"""
-
+progress_text = "Operation in progress. Please wait."
+my_bar = st.progress(0)
+my_bar.text(progress_text)
+percent_complete = 0
+percent = (h*w) / 100
 for i in range(h*w):
-    color = detect_color(rgb=[int(RGB[0][i]),int(RGB[1][i]),int(RGB[2][i])])
-    print(i)
+    color = detect_color(rgb=[int(RGB[0][i]), int(RGB[1][i]), int(RGB[2][i])])
     RGB[0][i] = color[0]
     RGB[1][i] = color[1]
     RGB[2][i] = color[2]
+    percent_complete += 1
+    progress = int(percent_complete/(h*w)*100)
+    my_bar.progress(progress)
 
-    
 
-color = detect_color(rgb=[int(RGB[0][33101]),int(RGB[1][33101]),int(RGB[2][33101])])
+color = detect_color(rgb=[int(RGB[0][33101]), int(RGB[1][33101]), int(RGB[2][33101])])
 print(str(RGB[0][33101])+":"+str(RGB[1][33101])+":"+str(RGB[2][33101]))
 
 print(color)
