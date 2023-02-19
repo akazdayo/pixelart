@@ -3,3 +3,4 @@ opencv-python
 opencv-contrib-python
 numpy
 pillow
+libgl1-mesa-glx
