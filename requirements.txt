@@ -4,4 +4,3 @@ opencv-contrib-python
 opencv-python-headless
 numpy
 pillow
-libgl1-mesa-glx
