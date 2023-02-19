@@ -2,7 +2,6 @@ import cv2
 from PIL import Image
 import numpy as np
 import streamlit as st
-from concurrent.futures.thread import ThreadPoolExecutor
 
 
 class Converter():
