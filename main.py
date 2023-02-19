@@ -9,11 +9,14 @@ def mosaic(src, ratio=0.1):
     return cv2.resize(small, src.shape[:2][::-1], interpolation=cv2.INTER_NEAREST)
 
 
-file_name = 'img.png'
+file_name = 'data/img/dango.png'
 pic = cv2.imread(file_name)
 h, w = pic.shape[:2]
 pic = cv2.cvtColor(pic, cv2.COLOR_BGR2RGB)
+pic = mosaic(src=pic)
 RGB = [[], [], []]
+
+st.title("PixelArt-Converter")
 
 
 def detect_color(rgb):
@@ -77,15 +80,11 @@ for k in range(3):
         for i in range(w):
             RGB[k].append(str(array[j, i]))
 
-"""
-for i in range(3):
-    for j in range(h*w):
-        if int(RGB[i][j]) >= 128:
-            RGB[i][j] = 255
-        else:
-            RGB[i][j] = 0
-"""
-
+progress_text = "Operation in progress. Please wait."
+my_bar = st.progress(0)
+my_bar.text(progress_text)
+percent_complete = 0
+percent = (h*w) / 100
 for i in range(h*w):
     color = detect_color(rgb=[int(RGB[0][i]), int(RGB[1][i]), int(RGB[2][i])])
     RGB[0][i] = color[0]
@@ -100,7 +99,7 @@ color = detect_color(rgb=[int(RGB[0][33101]), int(RGB[1][33101]), int(RGB[2][331
 print(str(RGB[0][33101])+":"+str(RGB[1][33101])+":"+str(RGB[2][33101]))
 
 print(color)
-"""
+
 # RGBリストをNumPy配列に変換する
 array = np.zeros((h, w, 3), dtype=np.uint8)
 for k in range(3):
@@ -113,4 +112,4 @@ for k in range(3):
 image = Image.fromarray(array)
 
 # 画像を保存する
-image.save("data/converted/"+file_name + ".png")
+image.save('restored.png')
