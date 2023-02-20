@@ -101,7 +101,7 @@ class Converter():
         image = Image.fromarray(array)
 
         # 画像を保存する
-        image.save('./data/restored.png')
+        #image.save('./data/restored.png')
         return array
 
 
