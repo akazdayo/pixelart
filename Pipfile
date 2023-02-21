@@ -5,8 +5,6 @@ name = "pypi"
 
 [packages]
 streamlit = "*"
-opencv-python = "*"
-opencv-contrib-python = "*"
 opencv-python-headless = "*"
 numpy = "*"
 pillow = "*"
