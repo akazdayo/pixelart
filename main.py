@@ -15,58 +15,31 @@ class Converter():
         pass
 
     def detect_color(self, rgb):
-        # RGB値の各要素を変数に格納します。
+        # RGB値を取得
         r, g, b = rgb[0], rgb[1], rgb[2]
 
-        # RGB値を0~1の範囲に変換します。
-        r /= 255
-        g /= 255
-        b /= 255
+        # 色名を定義するためのデータベース
+        color_names = {
+            (255, 127, 127): (255, 0, 0),  # 赤
+            (255, 191, 127): (255, 165, 0),  # オレンジ
+            (255, 255, 127): (255, 255, 0),  # 黄色
+            (127, 255, 127): (0, 128, 0),  # 緑
+            (127, 191, 255): (0, 0, 255),  # 青
+            (127, 127, 255): (128, 0, 128),  # 紫
+            (0, 0, 0): (0, 0, 0),  # 黒
+            (255, 255, 255): (255, 255, 255),  # 白
+            (128, 128, 128): (128, 128, 128)  # 灰色
+        }
 
-        # RGB値の輝度（明度）を計算します。
-        y = 0.2126 * r + 0.7152 * g + 0.0722 * b
-
-        # 輝度が一定の値以下であれば黒と判定し、一定の値以上であれば白と判定します。
-        if y <= 0.1:
-            return [0, 0, 0]
-        elif y >= 0.9:
-            return [255, 255, 255]
-
-        # 以下の処理は、色相（Hue）と彩度（Saturation）を計算する部分です。
-        cmax = max(r, g, b)
-        cmin = min(r, g, b)
-        delta = cmax - cmin
-
-        h = 0
-        s = 0
-        l = (cmax + cmin) / 2
-
-        if delta != 0:
-            if cmax == r:
-                h = (g - b) / delta % 6
-            elif cmax == g:
-                h = (b - r) / delta + 2
-            elif cmax == b:
-                h = (r - g) / delta + 4
-
-            s = delta / (1 - abs(2 * l - 1))
-
-            if s < 0.1:  # gray
-                return [228, 229, 227]
-            elif h < 1:  # red
-                return [255, 127, 127]
-            elif h < 2:  # orange
-                return [255, 191, 127]
-            elif h < 3:  # yellow
-                return [255, 255, 127]
-            elif h < 4:  # green
-                return [127, 255, 127]
-            elif h < 5:  # blue
-                return [127, 127, 255]
-            elif h < 6:  # purple
-                return [191, 127, 255]
-
-        return [0, 0, 0]
+        # 最も近い色を見つける
+        min_distance = float('inf')
+        color_name = None
+        for name, color in color_names.items():
+            distance = (r - color[0]) ** 2 + (g - color[1]) ** 2 + (b - color[2]) ** 2
+            if distance < min_distance:
+                min_distance = distance
+                color_name = name
+        return color_name
 
     def mosaic(self, src, ratio=0.1):
         small = cv2.resize(src, None, fx=ratio, fy=ratio, interpolation=cv2.INTER_NEAREST)
@@ -101,7 +74,7 @@ class Converter():
         image = Image.fromarray(array)
 
         # 画像を保存する
-        #image.save('./data/restored.png')
+        # image.save('./data/restored.png')
         return array
 
 
@@ -111,7 +84,7 @@ class Web():
         st.title("PixelArt-Converter")
         # self.my_upload = st.sidebar.file_uploader("Upload an image", type=["png", "jpg", "jpeg"])
         # アップローダー
-        self.my_upload = st.file_uploader("以下からファイルアップロード", type=['jpg', 'png'])
+        self.my_upload = st.file_uploader("以下からファイルアップロード", type=['jpg', 'png', 'webp'])
         # 解像度
         self.number = st.number_input('Insert a number', min_value=0.01, max_value=1.00)
         # カラム設定

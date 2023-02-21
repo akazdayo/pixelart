@@ -1,7 +1,6 @@
-libgl1-mesa-glx
-streamlit
-opencv-python
-opencv-contrib-python
-opencv-python-headless
-numpy
-pillow
+streamlit == 1.18.1
+opencv-python == 4.7.0.68
+opencv-contrib-python == 4.7.0.68
+opencv-python-headless == 4.7.0.68
+numpy == 1.24.2
+Pillow == 9.4.0
