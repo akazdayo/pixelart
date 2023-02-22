@@ -10,6 +10,7 @@ numpy = "*"
 pillow = "*"
 
 [dev-packages]
+opencv-python = "*"
 
 [requires]
 python_version = "3.11"
