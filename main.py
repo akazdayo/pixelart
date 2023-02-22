@@ -6,6 +6,8 @@ import cv2
 import math
 import datetime
 import threading
+import concurrent.futures
+import multiprocessing
 
 
 class Converter():
@@ -133,17 +135,11 @@ class Web():
         self.speed_chart = []
         # self.chart_thread = threading.Thread(target=self.progress_chart)
 
-    def progressbar(self, h, w, image):
-        i = 0
-        process = st.empty()
-        my_bar = st.progress(0)
-        my_bar.text(i)
-        percent_complete = 0
-        start_time = datetime.datetime.now()
-        self.chart = st.empty()
-
-        for i in range(h * w):
-            image = self.converter.generate(img=image, count=i)
+    def process_chunk(self, chunk_idx, h, w, image, converter, start_time, percent_complete, chart, speed_chart):
+        num_workers = multiprocessing.cpu_count()
+        num_chunks = h * w // num_workers
+        for i in range(chunk_idx * h * w // num_chunks, (chunk_idx + 1) * h * w // num_chunks):
+            image = converter.generate(img=image, count=i)
             percent_complete += 1
             progress = int(percent_complete / (h * w) * 100)
             elapsed_time = (datetime.datetime.now() - start_time).total_seconds()
@@ -152,11 +148,38 @@ class Web():
             remaining_time = datetime.timedelta(seconds=int((1 - current_progress) / average_progress)
                                                 ) if average_progress > 0 else datetime.timedelta(seconds=0)
             speed = int(i / elapsed_time) if elapsed_time > 0 else 0
-            self.speed_chart.append(speed)
-            process.text("{:.2f}% ({}/{}) - {} remaining - {} iterations/s".format(current_progress *
-                         100, percent_complete, h * w, remaining_time, speed))
-            self.progress_chart()
-            my_bar.progress(progress)
+            speed_chart.append(speed)
+
+        chart.append(percent_complete / (h * w) * 100)
+
+    def progressbar(self, h, w, image):
+        num_chunks = 4  # number of chunks to split the work into
+        process = st.empty()
+        my_bar = st.progress(0)
+        my_bar.text(0)
+        percent_complete = 0
+        start_time = datetime.datetime.now()
+        self.chart = st.empty()
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=num_chunks) as executor:
+            futures = []
+            speed_chart = [[] for _ in range(num_chunks)]
+            converter = self.converter
+            for chunk_idx in range(num_chunks):
+                future = executor.submit(self.process_chunk, chunk_idx, h, w, image, converter, start_time,
+                                         percent_complete, self.chart, speed_chart[chunk_idx])
+                futures.append(future)
+
+            for future in concurrent.futures.as_completed(futures):
+                pass
+
+        # combine the speed charts from all threads into a single list
+        self.speed_chart = sum(speed_chart, [])
+
+        process.text("{:.2f}% ({}/{}) - {} remaining - {} iterations/s".format(percent_complete / (h * w) * 100,
+                                                                               percent_complete, h * w, datetime.timedelta(seconds=0), 0))
+        self.progress_chart()
+
         return image
 
     def progress_chart(self):
