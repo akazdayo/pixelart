@@ -6,8 +6,7 @@ import cv2
 import math
 import datetime
 import threading
-import concurrent.futures
-import multiprocessing
+from concurrent.futures import ThreadPoolExecutor
 
 
 class Converter():
@@ -18,7 +17,7 @@ class Converter():
         # self.pic = cv2.cvtColor(self.pic, cv2.COLOR_BGR2RGB)
         # self.pic = self.mosaic(src=self.pic)
         # self.RGB = [[], [], []]
-        pass
+        self.preset = None
 
     def rgb_to_hsv(self, img):
         hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
@@ -27,19 +26,18 @@ class Converter():
     def detect_color(self, rgb):
         # RGB値を取得
         r, g, b = rgb[0], rgb[1], rgb[2]
-
         # 色名を定義するためのデータベース
-        color_names = {
-            (255, 127, 127): (255, 0, 0),  # 赤
-            (255, 191, 127): (255, 165, 0),  # オレンジ
-            (255, 255, 127): (255, 255, 0),  # 黄色
-            (127, 255, 127): (0, 128, 0),  # 緑
-            (127, 191, 255): (0, 0, 255),  # 青
-            (127, 127, 255): (128, 0, 128),  # 紫
-            (0, 0, 0): (0, 0, 0),  # 黒
-            (255, 255, 255): (255, 255, 255),  # 白
-            (128, 128, 128): (128, 128, 128)  # 灰色
-        }
+        pastel = [
+            (255, 127, 127),  # 赤
+            (255, 191, 127),  # オレンジ
+            (255, 255, 127),  # 黄色
+            (127, 255, 127),  # 緑
+            (127, 191, 255),  # 青
+            (127, 127, 255),  # 紫
+            (0, 0, 0),  # 黒
+            (255, 255, 255),  # 白
+            (128, 128, 128) # 灰色
+        ]
         pyxel_color = [
             (0, 0, 0),
             (43, 51, 95),
@@ -58,40 +56,33 @@ class Converter():
             (255, 151, 152),
             (237, 199, 176)
         ]
-        """
-        color_names = {
-            (255, 127, 127): (255, 0, 0),  # 赤
-            (255, 191, 127): (255, 165, 0),  # オレンジ
-            (255, 255, 127): (255, 255, 0),  # 黄色
-            (127, 255, 127): (0, 128, 0),  # 緑
-            (127, 191, 255): (0, 0, 255),  # 青
-            (127, 127, 255): (128, 0, 128),  # 紫
-            (0, 0, 0): (0, 0, 0),  # 黒
-            (255, 255, 255): (255, 255, 255),  # 白
-            (128, 128, 128): (128, 128, 128)  # 灰色
-        }
-        """
+
+        if self.preset == "pastel": self.preset = pastel
+        elif self.preset == "pyxel": self.preset = pyxel_color
 
         # 最も近い色を見つける
         min_distance = float('inf')
         color_name = None
-        for color in pyxel_color:
-            distance = (r - color[0]) ** 2 + (g - color[1]) ** 2 + (b - color[2]) ** 2
+        for color in self.preset:
+            distance = (r - color[0]) ** 2 + \
+                (g - color[1]) ** 2 + (b - color[2]) ** 2
             if distance < min_distance:
                 min_distance = distance
                 color_name = color
         return color_name
 
     def mosaic(self, src, ratio=0.1):
-        small = cv2.resize(src, None, fx=ratio, fy=ratio, interpolation=cv2.INTER_NEAREST)
+        small = cv2.resize(src, None, fx=ratio, fy=ratio,
+                           interpolation=cv2.INTER_NEAREST)
         return cv2.resize(small, src.shape[:2][::-1], interpolation=cv2.INTER_NEAREST)
 
     def generate(self, img, count):
-        color = self.detect_color(rgb=[int(img[0][count]), int(img[1][count]), int(img[2][count])])
+        color = self.detect_color(
+            rgb=[int(img[0][count]), int(img[1][count]), int(img[2][count])])
         img[0][count] = color[0]
         img[1][count] = color[1]
         img[2][count] = color[2]
-        return img
+        return_image(img)
 
     def store_variable(self, picture, variables, h, w):
         for k in range(3):
@@ -124,63 +115,54 @@ class Web():
         st.title("PixelArt-Converter")
         # self.my_upload = st.sidebar.file_uploader("Upload an image", type=["png", "jpg", "jpeg"])
         # アップローダー
-        self.my_upload = st.file_uploader("以下からファイルアップロード", type=['jpg', 'png', 'webp'])
+        self.my_upload = st.file_uploader(
+            "以下からファイルアップロード", type=['jpg', 'png', 'webp'])
         # 解像度
-        self.number = st.number_input('Insert a number', min_value=0.01, max_value=1.00, value=0.50)
+        self.number = st.number_input(
+            'Insert a number', min_value=0.01, max_value=1.00, value=0.50)
+        self.presets = st.selectbox(
+            'Color Preset',
+            ('pastel', 'pyxel'))
         # カラム設定
         self.col1, self.col2 = st.columns(2)
 
         self.col1.header("Original image")
         self.col2.header("convert image")
         self.speed_chart = []
+        self.variable = {}
+        self.convert_image = []
         # self.chart_thread = threading.Thread(target=self.progress_chart)
 
-    def process_chunk(self, chunk_idx, h, w, image, converter, start_time, percent_complete, chart, speed_chart):
-        num_workers = multiprocessing.cpu_count()
-        num_chunks = h * w // num_workers
-        for i in range(chunk_idx * h * w // num_chunks, (chunk_idx + 1) * h * w // num_chunks):
-            image = converter.generate(img=image, count=i)
-            percent_complete += 1
-            progress = int(percent_complete / (h * w) * 100)
-            elapsed_time = (datetime.datetime.now() - start_time).total_seconds()
-            current_progress = percent_complete / (h * w)
-            average_progress = current_progress / elapsed_time if elapsed_time > 0 else 0.0
-            remaining_time = datetime.timedelta(seconds=int((1 - current_progress) / average_progress)
-                                                ) if average_progress > 0 else datetime.timedelta(seconds=0)
-            speed = int(i / elapsed_time) if elapsed_time > 0 else 0
-            speed_chart.append(speed)
-
-        chart.append(percent_complete / (h * w) * 100)
-
     def progressbar(self, h, w, image):
-        num_chunks = 4  # number of chunks to split the work into
+        i = 0
         process = st.empty()
         my_bar = st.progress(0)
-        my_bar.text(0)
+        my_bar.text(i)
         percent_complete = 0
         start_time = datetime.datetime.now()
         self.chart = st.empty()
-
-        with concurrent.futures.ThreadPoolExecutor(max_workers=num_chunks) as executor:
-            futures = []
-            speed_chart = [[] for _ in range(num_chunks)]
-            converter = self.converter
-            for chunk_idx in range(num_chunks):
-                future = executor.submit(self.process_chunk, chunk_idx, h, w, image, converter, start_time,
-                                         percent_complete, self.chart, speed_chart[chunk_idx])
-                futures.append(future)
-
-            for future in concurrent.futures.as_completed(futures):
-                pass
-
-        # combine the speed charts from all threads into a single list
-        self.speed_chart = sum(speed_chart, [])
-
-        process.text("{:.2f}% ({}/{}) - {} remaining - {} iterations/s".format(percent_complete / (h * w) * 100,
-                                                                               percent_complete, h * w, datetime.timedelta(seconds=0), 0))
-        self.progress_chart()
-
-        return image
+        with ThreadPoolExecutor(max_workers=10) as executor:
+            for i in range(h * w):
+                executor.submit(self.converter.generate,image, i)
+                executor.submit(self.progress,i,h,w,start_time,process,my_bar)
+        print(self.convert_image)
+        return self.convert_image
+    
+    def progress(self,i,h,w,start_time,process,my_bar):
+        percent_complete += 1
+        progress = int(percent_complete / (h * w) * 100)
+        elapsed_time = (datetime.datetime.now() -
+                        start_time).total_seconds()
+        self.current_progress = percent_complete / (h * w)
+        average_progress = self.current_progress / elapsed_time if elapsed_time > 0 else 0.0
+        self.remaining_time = datetime.timedelta(seconds=int((1 - self.current_progress) / average_progress)
+                                            ) if average_progress > 0 else datetime.timedelta(seconds=0)
+        self.speed = int(i / elapsed_time) if elapsed_time > 0 else 0
+        self.speed_chart.append(self.speed)
+        process.text("{:.2f}% ({}/{}) - {} remaining - {} iterations/s".format(self.current_progress *
+                    100, percent_complete, h * w, self.remaining_time, self.speed))
+        #my_bar.progress(progress)
+        print(i)
 
     def progress_chart(self):
         chart_data = pd.DataFrame(
@@ -188,24 +170,30 @@ class Web():
 
         self.chart.line_chart(chart_data)
 
-
 def main():
     web = Web()
     converter = Converter()
     image = [[], [], []]
     if web.my_upload is not None:
-        img = Image.open(web.my_upload,)  # streamlitから読み込む
-        img_array = np.array(img)  # nparrayに変換
-        web.col1.image(img_array, use_column_width=None)  # 読み込んだ画像を表示
-        upload = cv2.cvtColor(img_array, cv2.COLOR_BGR2RGB)  # RGBからBGRに変換
-        height, width = upload.shape[:2]
-        upload = converter.mosaic(src=upload, ratio=web.number)
-        image = converter.store_variable(upload, image, h=height, w=width)
-        image = web.progressbar(h=height, w=width, image=image)  # generate
-        array = converter.image_save(img=image, h=height, w=width)
-        img_bytes = cv2.imencode('.jpg', array)[1].tobytes()
-        img_array2 = cv2.imdecode(np.frombuffer(img_bytes, np.uint8), cv2.IMREAD_COLOR)
-        web.col2.image(img_array2)
+        if st.button('Convert!'):
+            converter.preset = web.presets
+            img = Image.open(web.my_upload,)  # streamlitから読み込む
+            img_array = np.array(img)  # nparrayに変換
+            web.col1.image(img_array, use_column_width=None)  # 読み込んだ画像を表示
+            upload = img_array  # RGBからBGRに変換
+            height, width = upload.shape[:2]
+            upload = converter.mosaic(src=upload, ratio=web.number)
+            image = converter.store_variable(upload, image, h=height, w=width)
+            image = web.progressbar(h=height, w=width, image=image)  # generate
+            array = converter.image_save(img=image, h=height, w=width)
+            img_bytes = cv2.imencode('.jpg', array)[1].tobytes()
+            img_array2 = cv2.imdecode(np.frombuffer(
+                img_bytes, np.uint8), cv2.IMREAD_COLOR)
+            web.col2.image(img_array2)
 
+
+def return_image(img):
+    web = Web()
+    web.convert_image = img
 
 main()
