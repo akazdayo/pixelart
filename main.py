@@ -1,199 +1,121 @@
-from PIL import Image
-import numpy as np
-import pandas as pd
+"""
+Class Converter
+・色の変換
+・モザイク処理
+・画像を配列に変換
+
+
+Class Web
+・描画(タイトル, アップロードボタン)
+・描画(画像)
+・画像の取得・Numpy配列に変換
+・プログレスバー
+
+main()
+"""
 import streamlit as st
+import numpy as np
 import cv2
-import math
-import datetime
-import threading
-from concurrent.futures import ThreadPoolExecutor
+from PIL import Image
+import csv
 
 
 class Converter():
     def __init__(self) -> None:
-        # self.file_name = 'data/img/dango.png'
-        # self.pic = cv2.imread(self.file_name)
-        # self.h, self.w = self.pic.shape[:2]
-        # self.pic = cv2.cvtColor(self.pic, cv2.COLOR_BGR2RGB)
-        # self.pic = self.mosaic(src=self.pic)
-        # self.RGB = [[], [], []]
-        self.preset = None
+        pass
 
-    def rgb_to_hsv(self, img):
-        hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-        return hsv
+    def read_csv(self, path):
+        with open(path) as f:
+            reader = csv.reader(f)
+            color = [[int(v) for v in row] for row in reader]
+            return color
 
-    def detect_color(self, rgb):
+    def color_change(self, rgb):
         # RGB値を取得
-        r, g, b = rgb[0], rgb[1], rgb[2]
-        # 色名を定義するためのデータベース
-        pastel = [
-            (255, 127, 127),  # 赤
-            (255, 191, 127),  # オレンジ
-            (255, 255, 127),  # 黄色
-            (127, 255, 127),  # 緑
-            (127, 191, 255),  # 青
-            (127, 127, 255),  # 紫
-            (0, 0, 0),  # 黒
-            (255, 255, 255),  # 白
-            (128, 128, 128) # 灰色
-        ]
-        pyxel_color = [
-            (0, 0, 0),
-            (43, 51, 95),
-            (126, 32, 114),
-            (25, 149, 156),
-            (139, 72, 82),
-            (57, 92, 152),
-            (169, 193, 255),
-            (238, 238, 238),
-            (212, 24, 108),
-            (211, 132, 65),
-            (233, 195, 91),
-            (112, 198, 169),
-            (118, 150, 222),
-            (163, 163, 163),
-            (255, 151, 152),
-            (237, 199, 176)
-        ]
-
-        if self.preset == "pastel": self.preset = pastel
-        elif self.preset == "pyxel": self.preset = pyxel_color
+        r, g, b = int(rgb[0]), int(rgb[1]), int(rgb[2])
+        color_pallet = self.read_csv("./color/pyxel.csv")
 
         # 最も近い色を見つける
         min_distance = float('inf')
         color_name = None
-        for color in self.preset:
-            distance = (r - color[0]) ** 2 + \
-                (g - color[1]) ** 2 + (b - color[2]) ** 2
+        for color in color_pallet:
+            distance = (r - color[0]) ** 2 + (g - color[1]) ** 2 + (b - color[2]) ** 2
             if distance < min_distance:
                 min_distance = distance
                 color_name = color
         return color_name
 
     def mosaic(self, src, ratio=0.1):
-        small = cv2.resize(src, None, fx=ratio, fy=ratio,
-                           interpolation=cv2.INTER_NEAREST)
+        small = cv2.resize(src, None, fx=ratio, fy=ratio, interpolation=cv2.INTER_NEAREST)
         return cv2.resize(small, src.shape[:2][::-1], interpolation=cv2.INTER_NEAREST)
 
-    def generate(self, img, count):
-        color = self.detect_color(
-            rgb=[int(img[0][count]), int(img[1][count]), int(img[2][count])])
-        img[0][count] = color[0]
-        img[1][count] = color[1]
-        img[2][count] = color[2]
-        return_image(img)
-
-    def store_variable(self, picture, variables, h, w):
+    def store_variable(self, picture, h, w):
+        var = []
         for k in range(3):
             array = picture[:, :, k]
             for j in range(h):
                 for i in range(w):
-                    variables[k].append(str(array[j, i]))
-        return variables
+                    var.append(str(array[j, i]))
+        return var
 
-    def image_save(self, img, h, w):
+    def convert(self, img, rgb):
+        h, w = img.shape[:2]
+        changed = [[0]*(h*w)]*3
+        print(str(h) + "," + str(w))
+        # print(changed)
+
+        for i in range(h*w):
+            color = self.color_change(rgb)
+            for j in range(3):  # 0 = R, 1 = G, 2 = B
+                changed[j][i] = color[j]
+        return changed
+
+    def rgb2img(self, rgb, img):
+        h, w = img.shape[:2]
         # RGBリストをNumPy配列に変換する
         array = np.zeros((h, w, 3), dtype=np.uint8)
         for k in range(3):
             for j in range(h):
                 for i in range(w):
                     index = j * w + i
-                    array[j, i, k] = int(img[k][index])
-
-        # NumPy配列からPillowのImageオブジェクトを作成する
-        image = Image.fromarray(array)
-
-        # 画像を保存する
-        # image.save('./data/restored.png')
+                    array[j, i, k] = int(rgb[k][index])
         return array
 
 
 class Web():
     def __init__(self) -> None:
-        self.converter = Converter()
+        self.col1, self.col2 = None, None
+        self.draw_text()
+
+    def draw_text(self):
         st.title("PixelArt-Converter")
-        # self.my_upload = st.sidebar.file_uploader("Upload an image", type=["png", "jpg", "jpeg"])
-        # アップローダー
-        self.my_upload = st.file_uploader(
-            "以下からファイルアップロード", type=['jpg', 'png', 'webp'])
-        # 解像度
-        self.number = st.number_input(
-            'Insert a number', min_value=0.01, max_value=1.00, value=0.50)
-        self.presets = st.selectbox(
-            'Color Preset',
-            ('pastel', 'pyxel'))
-        # カラム設定
+        self.upload = st.file_uploader("以下からファイルアップロード", type=['jpg', 'png', 'webp'])
         self.col1, self.col2 = st.columns(2)
+        self.col1.header("Original img")
+        self.col2.header("Convert img")
 
-        self.col1.header("Original image")
-        self.col2.header("convert image")
-        self.speed_chart = []
-        self.variable = {}
-        self.convert_image = []
-        # self.chart_thread = threading.Thread(target=self.progress_chart)
+    def draw_image(self, image):
+        self.col2.image(image)
 
-    def progressbar(self, h, w, image):
-        i = 0
-        process = st.empty()
-        my_bar = st.progress(0)
-        my_bar.text(i)
-        percent_complete = 0
-        start_time = datetime.datetime.now()
-        self.chart = st.empty()
-        with ThreadPoolExecutor(max_workers=10) as executor:
-            for i in range(h * w):
-                executor.submit(self.converter.generate,image, i)
-                executor.submit(self.progress,i,h,w,start_time,process,my_bar)
-        print(self.convert_image)
-        return self.convert_image
-    
-    def progress(self,i,h,w,start_time,process,my_bar):
-        percent_complete += 1
-        progress = int(percent_complete / (h * w) * 100)
-        elapsed_time = (datetime.datetime.now() -
-                        start_time).total_seconds()
-        self.current_progress = percent_complete / (h * w)
-        average_progress = self.current_progress / elapsed_time if elapsed_time > 0 else 0.0
-        self.remaining_time = datetime.timedelta(seconds=int((1 - self.current_progress) / average_progress)
-                                            ) if average_progress > 0 else datetime.timedelta(seconds=0)
-        self.speed = int(i / elapsed_time) if elapsed_time > 0 else 0
-        self.speed_chart.append(self.speed)
-        process.text("{:.2f}% ({}/{}) - {} remaining - {} iterations/s".format(self.current_progress *
-                    100, percent_complete, h * w, self.remaining_time, self.speed))
-        #my_bar.progress(progress)
-        print(i)
+    def update_progress(self):
+        pass
 
-    def progress_chart(self):
-        chart_data = pd.DataFrame(
-            self.speed_chart)
+    def get_image(self):
+        img = Image.open(self.upload)
+        img_array = np.array(img)
+        return img_array
 
-        self.chart.line_chart(chart_data)
 
-def main():
+if __name__ == "__main__":
     web = Web()
     converter = Converter()
-    image = [[], [], []]
-    if web.my_upload is not None:
-        if st.button('Convert!'):
-            converter.preset = web.presets
-            img = Image.open(web.my_upload,)  # streamlitから読み込む
-            img_array = np.array(img)  # nparrayに変換
-            web.col1.image(img_array, use_column_width=None)  # 読み込んだ画像を表示
-            upload = img_array  # RGBからBGRに変換
-            height, width = upload.shape[:2]
-            upload = converter.mosaic(src=upload, ratio=web.number)
-            image = converter.store_variable(upload, image, h=height, w=width)
-            image = web.progressbar(h=height, w=width, image=image)  # generate
-            array = converter.image_save(img=image, h=height, w=width)
-            img_bytes = cv2.imencode('.jpg', array)[1].tobytes()
-            img_array2 = cv2.imdecode(np.frombuffer(
-                img_bytes, np.uint8), cv2.IMREAD_COLOR)
-            web.col2.image(img_array2)
 
-
-def return_image(img):
-    web = Web()
-    web.convert_image = img
-
-main()
+    if web.upload != None:
+        img = web.get_image()
+        height, width = img.shape[:2]
+        web.col1.image(img)
+        img = converter.mosaic(img, 0.3)
+        rgb = converter.store_variable(img, height, width)
+        rgb = converter.convert(img, rgb)
+        img = converter.rgb2img(rgb, img)
+        web.col2.image(img)
