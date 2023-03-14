@@ -111,6 +111,7 @@ class Web():
         self.col1, self.col2 = st.columns(2)
         self.col1.header("Original img")
         self.col2.header("Convert img")
+        st.write("Source Code : https://github.com/akazdayo/pixelart")
 
     def draw_image(self, image):
         self.col2.image(image)
