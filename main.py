@@ -22,7 +22,7 @@ import csv
 
 class Converter():
     def __init__(self) -> None:
-        pass
+        color_dict = []
 
     def read_csv(self, path):
         with open(path) as f:
@@ -30,16 +30,20 @@ class Converter():
             color = [[int(v) for v in row] for row in reader]
             return color
 
-    def color_change(self, rgb):
+    def color_change(self, r, g, b, option):
+        # print("R : "+r+"\nG : "+g+"\nB : "+b)
         # RGB値を取得
-        r, g, b = int(rgb[0]), int(rgb[1]), int(rgb[2])
-        color_pallet = self.read_csv("./color/pyxel.csv")
+        # r, g, b = int(rgb[0]), int(rgb[1]), int(rgb[2])
+        if option == "Pyxel":
+            color_pallet = self.read_csv("./color/pyxel.csv")
+        elif option == "Pastel":
+            color_pallet = self.read_csv("./color/pastel.csv")
 
         # 最も近い色を見つける
         min_distance = float('inf')
         color_name = None
         for color in color_pallet:
-            distance = (r - color[0]) ** 2 + (g - color[1]) ** 2 + (b - color[2]) ** 2
+            distance = (int(r) - color[0]) ** 2 + (int(g) - color[1]) ** 2 + (int(b) - color[2]) ** 2
             if distance < min_distance:
                 min_distance = distance
                 color_name = color
@@ -50,36 +54,48 @@ class Converter():
         return cv2.resize(small, src.shape[:2][::-1], interpolation=cv2.INTER_NEAREST)
 
     def store_variable(self, picture, h, w):
-        var = []
+        # 3つの色チャンネルごとに処理
+        var = [[[0]*width]*height]*3
         for k in range(3):
             array = picture[:, :, k]
-            for j in range(h):
-                for i in range(w):
-                    var.append(str(array[j, i]))
+            # 画像の高さと幅でループ
+            for i in range(h):
+                for j in range(w):
+                    # 各ピクセルの値を文字列に変換して格納
+                    var[k][i][j] = (str(array[i, j]))
         return var
 
-    def convert(self, img, rgb):
-        h, w = img.shape[:2]
-        changed = [[0]*(h*w)]*3
-        print(str(h) + "," + str(w))
-        # print(changed)
-
-        for i in range(h*w):
-            color = self.color_change(rgb)
-            for j in range(3):  # 0 = R, 1 = G, 2 = B
-                changed[j][i] = color[j]
+    def convert(self, img, option):
+        w, h = img.shape[:2]
+        changed = img.copy()
+        for height in range(h):
+            for width in range(w):
+                color = self.color_change(img[width][height][0], img[width][height][1], img[width][height][2], option)
+                changed[width][height][0] = color[0]  # 赤
+                changed[width][height][1] = color[1]  # 緑
+                changed[width][height][2] = color[2]  # 青
         return changed
 
     def rgb2img(self, rgb, img):
-        h, w = img.shape[:2]
-        # RGBリストをNumPy配列に変換する
-        array = np.zeros((h, w, 3), dtype=np.uint8)
-        for k in range(3):
-            for j in range(h):
-                for i in range(w):
-                    index = j * w + i
-                    array[j, i, k] = int(rgb[k][index])
-        return array
+        h, w = img.shape[:2]  # 画像の高さと幅を取得
+        array = np.zeros((h, w, 3), dtype=np.uint8)  # 高さと幅と3つのチャンネル（RGB）を持つNumPy配列を作成
+        for color in range(3):  # RGBチャンネルごとに処理
+            for height in range(h):  # 高さ方向に処理
+                for width in range(w):  # 幅方向に処理
+                    # index = height * w + width
+                    array[height, width, color] = int(rgb[color][height][width])  # RGBリストから値を取り出し、NumPy配列に代入
+        return array  # 作成したNumPy配列を返す
+
+    def convert_rgb_list_to_image(self, rgb_list, img):
+        """
+        RGBのリストから画像に変換する関数
+        :param rgb_list: RGBのリスト
+        :return: 画像
+        """
+        rgb_array = np.transpose(np.array(rgb_list), (1, 2, 0))  # リストをNumpy配列に変換し、軸を入れ替える
+        print(rgb_array.shape)
+        image = Image.fromarray(np.uint8(rgb_array))  # Numpy配列から画像に変換
+        return image  # 画像を返す
 
 
 class Web():
@@ -89,7 +105,9 @@ class Web():
 
     def draw_text(self):
         st.title("PixelArt-Converter")
-        self.upload = st.file_uploader("以下からファイルアップロード", type=['jpg', 'png', 'webp'])
+        self.upload = st.file_uploader("Upload Image", type=['jpg', 'png', 'webp'])
+        self.color = st.selectbox("Select color pallet", ('Pyxel', 'Pastel'))
+        self.slider = st.slider('Select ratio', 0.1, 1.0, 0.5, 0.05)
         self.col1, self.col2 = st.columns(2)
         self.col1.header("Original img")
         self.col2.header("Convert img")
@@ -112,10 +130,15 @@ if __name__ == "__main__":
 
     if web.upload != None:
         img = web.get_image()
-        height, width = img.shape[:2]
-        web.col1.image(img)
-        img = converter.mosaic(img, 0.3)
-        rgb = converter.store_variable(img, height, width)
-        rgb = converter.convert(img, rgb)
-        img = converter.rgb2img(rgb, img)
-        web.col2.image(img)
+    else:
+        img = Image.open("./sample/irasutoya.png")
+        img = np.array(img)
+    height, width = img.shape[:2]
+    # rgb = [[[0]*width]*height]*3
+    cimg = img.copy()
+    web.col1.image(img)
+    cimg = converter.mosaic(cimg, web.slider)
+    # rgb = converter.store_variable(img, height, width)
+    cimg = converter.convert(cimg, web.color)
+    # img = converter.convert_rgb_list_to_image(rgb, img)
+    web.col2.image(cimg)
