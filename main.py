@@ -34,11 +34,19 @@ class Converter():
         # print("R : "+r+"\nG : "+g+"\nB : "+b)
         # RGB値を取得
         # r, g, b = int(rgb[0]), int(rgb[1]), int(rgb[2])
+        """
         if option == "Pyxel":
             color_pallet = self.read_csv("./color/pyxel.csv")
         elif option == "Pastel":
             color_pallet = self.read_csv("./color/pastel.csv")
-
+        elif option == "Warm":
+            color_pallet = self.read_csv("./color/warm.csv")
+        elif option == "Cold":
+            color_pallet = self.read_csv("./color/cold.csv")
+        elif option == "Rainbow":
+            color_pallet = self.read_csv("./color/rainbow.csv")
+        """
+        color_pallet = self.read_csv("./color/"+option+".csv")
         # 最も近い色を見つける
         min_distance = float('inf')
         color_name = None
@@ -106,7 +114,7 @@ class Web():
     def draw_text(self):
         st.title("PixelArt-Converter")
         self.upload = st.file_uploader("Upload Image", type=['jpg', 'png', 'webp'])
-        self.color = st.selectbox("Select color pallet", ('Pyxel', 'Pastel'))
+        self.color = st.selectbox("Select color pallet", ('pyxel', 'pastel', 'warm', 'cold', 'rainbow', 'gold', 'pale'))
         self.slider = st.slider('Select ratio', 0.1, 1.0, 0.5, 0.05)
         self.col1, self.col2 = st.columns(2)
         self.col1.header("Original img")
