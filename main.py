@@ -138,9 +138,6 @@ if __name__ == "__main__":
             web.col2.image(cimg)
         st.success('Done!', icon="✅")
         st.balloons()
-        print("------")
-        print(converter.counter)
-        print(converter.counterr)
     elif default == False:
         with st.spinner('Wait for it...'):
             img = Image.open("./sample/irasutoya.png")
