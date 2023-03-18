@@ -82,7 +82,6 @@ class Converter():
             if custom == [] or custom == None:
                 return
             color_pallet = [item[0] for item in custom]
-            st.write(color_pallet)
 
         for height in range(h):
             for width in range(w):
