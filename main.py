@@ -207,13 +207,24 @@ if __name__ == "__main__":
         st.success('Done!', icon="✅")
     elif default == False:
         with st.spinner('Wait for it...'):
-            img = Image.open("./sample/irasutoya.png")
-            img = np.array(img)
-            default = True
-            height, width = img.shape[:2]
-            cimg = img.copy()
-            web.col1.image(img)
-            cimg = converter.mosaic(cimg, web.slider)
-            cimg = converter.convert(cimg, web.color)
-            web.col2.image(cimg)
-        st.success('Done!')
+            if web.custom:
+                img = Image.open("sample/irasutoya.png")
+                img = np.array(img)
+                height, width = img.shape[:2]
+                cimg = img.copy()
+                web.col1.image(img)
+                cimg = converter.mosaic(cimg, web.slider)
+                cimg = converter.convert(cimg, "Custom", web.rgblist)
+                # cimg = converter.anime_filter(cimg)
+                web.col2.image(cimg, use_column_width=True)
+            else:
+                img = Image.open("sample/irasutoya.png")
+                img = np.array(img)
+                height, width = img.shape[:2]
+                cimg = img.copy()
+                web.col1.image(img)
+                cimg = converter.mosaic(cimg, web.slider)
+                cimg = converter.convert(cimg, web.color)
+                # cimg = converter.anime_filter(cimg)
+                web.col2.image(cimg, use_column_width=True)
+        st.success('Done!', icon="✅")
