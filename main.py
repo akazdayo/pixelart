@@ -150,31 +150,39 @@ class Web():
         self.col1.header("Original img")
         self.col2.header("Convert img")
         with st.expander("Custom pallet"):
-            st.title("Add pallet")
-            _ = st.color_picker('Pick A Color', '#ffffff')
-            df = pd.DataFrame(
-                [
-                    {"R": 255, "G": 0, "B": 0},
-                    {"R": 0, "G": 255, "B": 0},
-                    {"R": 0, "G": 0, "B": 255},
-                    {"R": 0, "G": 0, "B": 0},
-                    {"R": 255, "G": 255, "B": 255},
-                ]
-            )
-            self.edited_df = st.experimental_data_editor(df, num_rows="dynamic")
-            self.rgblist = list()
-            for i in range(len(self.edited_df.loc[self.edited_df["R"].keys()])):
-                self.rgblist.append([])
-                self.rgblist[i].append((self.edited_df.loc[self.edited_df.index[i]]["R"],
-                                        self.edited_df.loc[self.edited_df.index[i]]["G"],
-                                        self.edited_df.loc[self.edited_df.index[i]]["B"]))
+            self.custom_pallet()
+
         with st.expander("Experimental Features"):
-            st.write("""
+            self.experimental()
+        st.write("Source Code : https://github.com/akazdayo/pixelart")
+
+    def custom_pallet(self):
+        st.title("Add pallet")
+        _ = st.color_picker('Pick A Color', '#ffffff')
+        df = pd.DataFrame(
+            [
+                {"R": 255, "G": 0, "B": 0},
+                {"R": 0, "G": 255, "B": 0},
+                {"R": 0, "G": 0, "B": 255},
+                {"R": 0, "G": 0, "B": 0},
+                {"R": 255, "G": 255, "B": 255},
+            ]
+        )
+        self.edited_df = st.experimental_data_editor(df, num_rows="dynamic")
+        self.rgblist = list()
+        for i in range(len(self.edited_df.loc[self.edited_df["R"].keys()])):
+            self.rgblist.append([])
+            self.rgblist[i].append((self.edited_df.loc[self.edited_df.index[i]]["R"],
+                                    self.edited_df.loc[self.edited_df.index[i]]["G"],
+                                    self.edited_df.loc[self.edited_df.index[i]]["B"]))
+        if st.button("Generate Code"):
+            pass
+
+    def experimental(self):
+        st.write("""
             The following features are experimental and subject to errors and bugs.
             """)
-            self.edge_filter = st.checkbox('Anime Filter')
-
-        st.write("Source Code : https://github.com/akazdayo/pixelart")
+        self.edge_filter = st.checkbox('Anime Filter')
 
     def update_progress(self):
         pass
