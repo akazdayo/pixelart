@@ -1,6 +1,6 @@
 # pixelart-converter
 画像をドット絵に変換できるサイトです。  
-[pixelart-converter](https://akazdayo-pixelart.streamlit.app)
+[pixelart-converter](https://pixelart.streamlit.app)
 
 ## 機能
 ### ratio

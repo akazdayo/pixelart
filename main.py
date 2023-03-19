@@ -149,24 +149,30 @@ class Web():
         self.col1, self.col2 = st.columns(2)
         self.col1.header("Original img")
         self.col2.header("Convert img")
-
-        st.title("Add pallet")
-        _ = st.color_picker('Pick A Color', '#ffffff')
-        df = pd.DataFrame(
-            [
-                {"R": 4, "G": 4, "B": 5},
-                {"R": 5, "G": 4, "B": 5},
-                {"R": 3, "G": 2, "B": 5},
-            ]
-        )
-        self.edited_df = st.experimental_data_editor(df, num_rows="dynamic")
-        # userpallet = edited_df.loc[edited_df["R"].keys()]["Color"]
-        self.rgblist = list()
-        for i in range(len(self.edited_df.loc[self.edited_df["R"].keys()])):
-            self.rgblist.append([])
-            self.rgblist[i].append((self.edited_df.loc[self.edited_df.index[i]]["R"],
-                                    self.edited_df.loc[self.edited_df.index[i]]["G"],
-                                    self.edited_df.loc[self.edited_df.index[i]]["B"]))
+        with st.expander("Custom pallet"):
+            st.title("Add pallet")
+            _ = st.color_picker('Pick A Color', '#ffffff')
+            df = pd.DataFrame(
+                [
+                    {"R": 255, "G": 0, "B": 0},
+                    {"R": 0, "G": 255, "B": 0},
+                    {"R": 0, "G": 0, "B": 255},
+                    {"R": 0, "G": 0, "B": 0},
+                    {"R": 255, "G": 255, "B": 255},
+                ]
+            )
+            self.edited_df = st.experimental_data_editor(df, num_rows="dynamic")
+            self.rgblist = list()
+            for i in range(len(self.edited_df.loc[self.edited_df["R"].keys()])):
+                self.rgblist.append([])
+                self.rgblist[i].append((self.edited_df.loc[self.edited_df.index[i]]["R"],
+                                        self.edited_df.loc[self.edited_df.index[i]]["G"],
+                                        self.edited_df.loc[self.edited_df.index[i]]["B"]))
+        with st.expander("Experimental Features"):
+            st.write("""
+            The following features are experimental and subject to errors and bugs.
+            """)
+            self.edge_filter = st.checkbox('Anime Filter')
 
         st.write("Source Code : https://github.com/akazdayo/pixelart")
 
@@ -192,7 +198,8 @@ if __name__ == "__main__":
                 web.col1.image(img)
                 cimg = converter.mosaic(cimg, web.slider)
                 cimg = converter.convert(cimg, "Custom", web.rgblist)
-                # cimg = converter.anime_filter(cimg)
+                if web.edge_filter:
+                    cimg = converter.anime_filter(cimg)
                 web.col2.image(cimg, use_column_width=True)
             else:
                 img = web.get_image()
@@ -201,7 +208,8 @@ if __name__ == "__main__":
                 web.col1.image(img)
                 cimg = converter.mosaic(cimg, web.slider)
                 cimg = converter.convert(cimg, web.color)
-                # cimg = converter.anime_filter(cimg)
+                if web.edge_filter:
+                    cimg = converter.anime_filter(cimg)
                 web.col2.image(cimg, use_column_width=True)
         st.success('Done!', icon="✅")
     elif default == False:
@@ -214,7 +222,8 @@ if __name__ == "__main__":
                 web.col1.image(img)
                 cimg = converter.mosaic(cimg, web.slider)
                 cimg = converter.convert(cimg, "Custom", web.rgblist)
-                # cimg = converter.anime_filter(cimg)
+                if web.edge_filter:
+                    cimg = converter.anime_filter(cimg)
                 web.col2.image(cimg, use_column_width=True)
             else:
                 img = Image.open("sample/irasutoya.png")
@@ -224,6 +233,7 @@ if __name__ == "__main__":
                 web.col1.image(img)
                 cimg = converter.mosaic(cimg, web.slider)
                 cimg = converter.convert(cimg, web.color)
-                # cimg = converter.anime_filter(cimg)
+                if web.edge_filter:
+                    cimg = converter.anime_filter(cimg)
                 web.col2.image(cimg, use_column_width=True)
         st.success('Done!', icon="✅")
