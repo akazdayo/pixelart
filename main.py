@@ -175,8 +175,6 @@ class Web():
             self.rgblist[i].append((self.edited_df.loc[self.edited_df.index[i]]["R"],
                                     self.edited_df.loc[self.edited_df.index[i]]["G"],
                                     self.edited_df.loc[self.edited_df.index[i]]["B"]))
-        if st.button("Generate Code"):
-            pass
 
     def experimental(self):
         st.write("""
