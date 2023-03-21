@@ -1,5 +1,5 @@
 # pixelart-converter
-画像をドット絵に変換できるサイトです。  
+Fascinating tool to convert images into pixel art!  
 [pixelart-converter](https://pixelart.streamlit.app)
 
 ## 機能

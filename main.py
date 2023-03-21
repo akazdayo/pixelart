@@ -22,6 +22,7 @@ csv追加したら自動的に読み込まれる(完成)
 csvの追加
 """
 import streamlit as st
+import streamlit.components.v1 as components
 import numpy as np
 import cv2
 from PIL import Image
@@ -94,7 +95,8 @@ class Converter():
     def anime_filter(self, img, K=20):
         # アルファチャンネルを分離
         bgr = img[:, :, :3]
-        alpha = img[:, :, 3]
+        if len(img[0][0]) == 4:
+            alpha = img[:, :, 3]
 
         # グレースケール変換
         gray = cv2.cvtColor(bgr, cv2.COLOR_BGR2GRAY)
@@ -116,7 +118,10 @@ class Converter():
         result = cv2.subtract(bgr, edge)
 
         # アルファチャンネルを結合して返す
-        return np.dstack([result, alpha])
+        if len(img[0][0]) == 4:
+            return np.dstack([result, alpha])
+        else:
+            return result
 
 
 class Web():
@@ -145,6 +150,7 @@ class Web():
         self.color = st.selectbox("Select color pallet", fdir)
         self.slider = st.slider('Select ratio', 0.01, 1.0, 0.3, 0.01)
         self.custom = st.checkbox('Custom Pallet')
+        self.share()
 
         self.col1, self.col2 = st.columns(2)
         self.col1.header("Original img")
@@ -156,9 +162,19 @@ class Web():
             self.experimental()
         st.write("Source Code : https://github.com/akazdayo/pixelart")
 
+    def share(self):
+        components.html(
+            """
+<a href="https://twitter.com/share?ref_src=twsrc%5Etfw" class="twitter-share-button" data-show-count="false" data-text="PixelArt-Converter\nFascinating tool to convert images into pixel art!\n" data-url="https://pixelart.streamlit.app" data-hashtags="pixelart,streamlit">Tweet</a><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+            """,
+            height=30,
+        )
+
     def custom_pallet(self):
         st.title("Add pallet")
         _ = st.color_picker('Pick A Color', '#ffffff')
+        df, col2 = st.columns(2)
+        col2.title("hello")
         df = pd.DataFrame(
             [
                 {"R": 255, "G": 0, "B": 0},
@@ -180,7 +196,9 @@ class Web():
         st.write("""
             The following features are experimental and subject to errors and bugs.
             """)
+
         self.edge_filter = st.checkbox('Anime Filter')
+        self.no_convert = st.checkbox('No Color Convert')
 
     def update_progress(self):
         pass
@@ -203,7 +221,8 @@ if __name__ == "__main__":
                 cimg = img.copy()
                 web.col1.image(img)
                 cimg = converter.mosaic(cimg, web.slider)
-                cimg = converter.convert(cimg, "Custom", web.rgblist)
+                if web.no_convert == False:
+                    cimg = converter.convert(cimg, "Custom", web.rgblist)
                 if web.edge_filter:
                     cimg = converter.anime_filter(cimg)
                 web.col2.image(cimg, use_column_width=True)
@@ -213,7 +232,8 @@ if __name__ == "__main__":
                 cimg = img.copy()
                 web.col1.image(img)
                 cimg = converter.mosaic(cimg, web.slider)
-                cimg = converter.convert(cimg, web.color)
+                if web.no_convert == False:
+                    cimg = converter.convert(cimg, web.color)
                 if web.edge_filter:
                     cimg = converter.anime_filter(cimg)
                 web.col2.image(cimg, use_column_width=True)
