@@ -92,7 +92,7 @@ class Converter():
                 changed[width][height][2] = color[2]  # 青
         return changed
 
-    def anime_filter(self, img, K=20):
+    def anime_filter(self, img, th1=50, th2=150):
         # アルファチャンネルを分離
         bgr = img[:, :, :3]
         if len(img[0][0]) == 4:
@@ -105,7 +105,7 @@ class Converter():
         edge = cv2.blur(gray, (3, 3))
 
         # Cannyアルゴリズムで輪郭抽出
-        edge = cv2.Canny(edge, 50, 150, apertureSize=3)
+        edge = cv2.Canny(edge, th1, th2, apertureSize=3)
 
         # 輪郭画像をRGB色空間に変換
         edge = cv2.cvtColor(edge, cv2.COLOR_GRAY2BGR)
@@ -174,7 +174,7 @@ class Web():
         st.title("Add pallet")
         _ = st.color_picker('Pick A Color', '#ffffff')
         df, col2 = st.columns(2)
-        col2.title("hello")
+        # col2.title("hello")
         df = pd.DataFrame(
             [
                 {"R": 255, "G": 0, "B": 0},
@@ -199,6 +199,10 @@ class Web():
 
         self.edge_filter = st.checkbox('Anime Filter')
         self.no_convert = st.checkbox('No Color Convert')
+        self.anime_th1 = st.slider('Select threhsold1(minVal)', 0.0, 500.0, 250.0, 5.0,
+                                   help="The smaller the value, the more edges there are.(using cv2.Canny)", disabled=not self.edge_filter)
+        self.anime_th2 = st.slider('Select threhsold2(maxVal)', 0.0, 500.0, 250.0, 5.0,
+                                   help="The smaller the value, the more edges there are.(using cv2.Canny)", disabled=not self.edge_filter)
 
     def update_progress(self):
         pass
@@ -224,7 +228,7 @@ if __name__ == "__main__":
                 if web.no_convert == False:
                     cimg = converter.convert(cimg, "Custom", web.rgblist)
                 if web.edge_filter:
-                    cimg = converter.anime_filter(cimg)
+                    cimg = converter.anime_filter(cimg, web.anime_th1, web.anime_th2)
                 web.col2.image(cimg, use_column_width=True)
             else:
                 img = web.get_image()
@@ -235,7 +239,7 @@ if __name__ == "__main__":
                 if web.no_convert == False:
                     cimg = converter.convert(cimg, web.color)
                 if web.edge_filter:
-                    cimg = converter.anime_filter(cimg)
+                    cimg = converter.anime_filter(cimg, web.anime_th1, web.anime_th2)
                 web.col2.image(cimg, use_column_width=True)
         st.success('Done!', icon="✅")
     elif default == False:
@@ -250,7 +254,7 @@ if __name__ == "__main__":
                 if web.no_convert == False:
                     cimg = converter.convert(cimg, "Custom", web.rgblist)
                 if web.edge_filter:
-                    cimg = converter.anime_filter(cimg)
+                    cimg = converter.anime_filter(cimg, web.anime_th1, web.anime_th2)
                 web.col2.image(cimg, use_column_width=True)
             else:
                 img = Image.open("sample/irasutoya.png")
@@ -262,6 +266,6 @@ if __name__ == "__main__":
                 if web.no_convert == False:
                     cimg = converter.convert(cimg, web.color)
                 if web.edge_filter:
-                    cimg = converter.anime_filter(cimg)
+                    cimg = converter.anime_filter(cimg, web.anime_th1, web.anime_th2)
                 web.col2.image(cimg, use_column_width=True)
         st.success('Done!', icon="✅")
