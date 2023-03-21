@@ -247,7 +247,8 @@ if __name__ == "__main__":
                 cimg = img.copy()
                 web.col1.image(img)
                 cimg = converter.mosaic(cimg, web.slider)
-                cimg = converter.convert(cimg, "Custom", web.rgblist)
+                if web.no_convert == False:
+                    cimg = converter.convert(cimg, "Custom", web.rgblist)
                 if web.edge_filter:
                     cimg = converter.anime_filter(cimg)
                 web.col2.image(cimg, use_column_width=True)
@@ -258,7 +259,8 @@ if __name__ == "__main__":
                 cimg = img.copy()
                 web.col1.image(img)
                 cimg = converter.mosaic(cimg, web.slider)
-                cimg = converter.convert(cimg, web.color)
+                if web.no_convert == False:
+                    cimg = converter.convert(cimg, web.color)
                 if web.edge_filter:
                     cimg = converter.anime_filter(cimg)
                 web.col2.image(cimg, use_column_width=True)
