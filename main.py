@@ -173,7 +173,7 @@ class Web():
     def custom_pallet(self):
         st.title("Add pallet")
         _ = st.color_picker('Pick A Color', '#ffffff')
-        df, col2 = st.columns(2)
+        col1, col2 = st.columns(2)
         # col2.title("hello")
         df = pd.DataFrame(
             [
@@ -184,13 +184,21 @@ class Web():
                 {"R": 255, "G": 255, "B": 255},
             ]
         )
-        self.edited_df = st.experimental_data_editor(df, num_rows="dynamic")
+        self.edited_df = col1.experimental_data_editor(df, num_rows="dynamic")
         self.rgblist = list()
         for i in range(len(self.edited_df.loc[self.edited_df["R"].keys()])):
             self.rgblist.append([])
             self.rgblist[i].append((self.edited_df.loc[self.edited_df.index[i]]["R"],
                                     self.edited_df.loc[self.edited_df.index[i]]["G"],
                                     self.edited_df.loc[self.edited_df.index[i]]["B"]))
+        self.show_custom(col2)
+
+    def show_custom(self, col):
+        color_pallet = [item[0] for item in self.rgblist]
+        for i in color_pallet:
+            color = np.zeros((50, 50, 3), dtype=np.uint8)
+            color[:, :] = [i[0], i[1], i[2]]
+            col.image(color)
 
     def experimental(self):
         st.write("""
