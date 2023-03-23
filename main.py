@@ -123,6 +123,20 @@ class Converter():
         else:
             return result
 
+    def decreaseColor(self, img):
+        dst = img.copy()
+
+        idx = np.where((0 <= img) & (64 > img))
+        dst[idx] = 32
+        idx = np.where((64 <= img) & (128 > img))
+        dst[idx] = 96
+        idx = np.where((128 <= img) & (192 > img))
+        dst[idx] = 160
+        idx = np.where((192 <= img) & (256 > img))
+        dst[idx] = 224
+
+        return dst
+
 
 class Web():
     def __init__(self) -> None:
@@ -219,6 +233,7 @@ class Web():
             """)
         self.edge_filter = st.checkbox('Anime Filter')
         self.no_convert = st.checkbox('No Color Convert')
+        self.decreaseColor = st.checkbox('decrease Color')
         self.anime_th1 = st.slider('Select threhsold1(minVal)', 0.0, 500.0, 250.0, 5.0,
                                    help="The smaller the value, the more edges there are.(using cv2.Canny)", disabled=not self.edge_filter)
         self.anime_th2 = st.slider('Select threhsold2(maxVal)', 0.0, 500.0, 250.0, 5.0,
@@ -249,6 +264,8 @@ if __name__ == "__main__":
                 cimg = converter.convert(cimg, "Custom", web.rgblist)
             else:
                 cimg = converter.convert(cimg, web.color)
+        if web.decreaseColor:
+            cimg = converter.decreaseColor(cimg)
         if web.edge_filter:
             cimg = converter.anime_filter(cimg, web.anime_th1, web.anime_th2)
         web.col2.image(cimg, use_column_width=True)
