@@ -82,7 +82,7 @@ class Converter():
         else:
             if custom == [] or custom == None:
                 return
-            color_pallet = [item[0] for item in custom]
+            color_pallet = custom
 
         for height in range(h):
             for width in range(w):
@@ -143,7 +143,6 @@ class Web():
             layout="centered",
             initial_sidebar_state="expanded",
         )
-        # file_dir = os.listdir("./color")
         fdir = self.file_dir()
         st.title("PixelArt-Converter")
         self.upload = st.file_uploader("Upload Image", type=['jpg', 'jpeg', 'png', 'webp'])
@@ -170,41 +169,54 @@ class Web():
             height=30,
         )
 
+    def hex_to_rgb(self, hex_code):
+        hex_code = hex_code.replace("#", "")
+        r = int(hex_code[0:2], 16)
+        g = int(hex_code[2:4], 16)
+        b = int(hex_code[4:6], 16)
+        return [r, g, b]
+
+    def hex_to_rgblist(self, hex_list):
+        rgb_values = []
+        for hex_code in hex_list:
+            rgb_values.append(self.hex_to_rgb(hex_code[1:]))
+        return rgb_values
+
     def custom_pallet(self):
         st.title("Add pallet")
         _ = st.color_picker('Pick A Color', '#ffffff')
         col1, col2 = st.columns(2)
-        # col2.title("hello")
         df = pd.DataFrame(
             [
-                {"R": 255, "G": 0, "B": 0},
-                {"R": 0, "G": 255, "B": 0},
-                {"R": 0, "G": 0, "B": 255},
-                {"R": 0, "G": 0, "B": 0},
-                {"R": 255, "G": 255, "B": 255},
+                {"hex": "#FF0000"},
+                {"hex": "#00FF00"},
+                {"hex": "#0000FF"},
+                {"hex": "#FFFFFF"},
+                {"hex": "#000000"},
             ]
         )
         self.edited_df = col1.experimental_data_editor(df, num_rows="dynamic")
         self.rgblist = list()
-        for i in range(len(self.edited_df.loc[self.edited_df["R"].keys()])):
+        for i in range(len(self.edited_df.loc[self.edited_df["hex"].keys()])):
             self.rgblist.append([])
-            self.rgblist[i].append((self.edited_df.loc[self.edited_df.index[i]]["R"],
-                                    self.edited_df.loc[self.edited_df.index[i]]["G"],
-                                    self.edited_df.loc[self.edited_df.index[i]]["B"]))
+            self.rgblist[i].append((self.edited_df.loc[self.edited_df.index[i]]["hex"]))
         self.show_custom(col2)
 
     def show_custom(self, col):
         color_pallet = [item[0] for item in self.rgblist]
+        color_pallet = self.hex_to_rgblist(color_pallet)
+        rgb = []
         for i in color_pallet:
             color = np.zeros((50, 50, 3), dtype=np.uint8)
             color[:, :] = [i[0], i[1], i[2]]
             col.image(color)
+            rgb.append(i)
+        self.rgblist = rgb
 
     def experimental(self):
         st.write("""
             The following features are experimental and subject to errors and bugs.
             """)
-
         self.edge_filter = st.checkbox('Anime Filter')
         self.no_convert = st.checkbox('No Color Convert')
         self.anime_th1 = st.slider('Select threhsold1(minVal)', 0.0, 500.0, 250.0, 5.0,
@@ -212,11 +224,8 @@ class Web():
         self.anime_th2 = st.slider('Select threhsold2(maxVal)', 0.0, 500.0, 250.0, 5.0,
                                    help="The smaller the value, the more edges there are.(using cv2.Canny)", disabled=not self.edge_filter)
 
-    def update_progress(self):
-        pass
-
-    def get_image(self):
-        img = Image.open(self.upload)
+    def get_image(self, upload):
+        img = Image.open(upload)
         img_array = np.array(img)
         return img_array
 
@@ -225,55 +234,22 @@ if __name__ == "__main__":
     web = Web()
     converter = Converter()
     default = False  # サンプル画像を一度のみ表示
-    if web.upload != None:
-        with st.spinner('Wait for it...'):
+    with st.spinner('Wait for it...'):
+        if web.upload != None:
+            img = web.get_image(web.upload)
+        elif default == False:
+            img = web.get_image("sample/irasutoya.png")
+            default = True
+        height, width = img.shape[:2]
+        cimg = img.copy()
+        web.col1.image(img)
+        cimg = converter.mosaic(cimg, web.slider)
+        if web.no_convert == False:
             if web.custom:
-                img = web.get_image()
-                height, width = img.shape[:2]
-                cimg = img.copy()
-                web.col1.image(img)
-                cimg = converter.mosaic(cimg, web.slider)
-                if web.no_convert == False:
-                    cimg = converter.convert(cimg, "Custom", web.rgblist)
-                if web.edge_filter:
-                    cimg = converter.anime_filter(cimg, web.anime_th1, web.anime_th2)
-                web.col2.image(cimg, use_column_width=True)
+                cimg = converter.convert(cimg, "Custom", web.rgblist)
             else:
-                img = web.get_image()
-                height, width = img.shape[:2]
-                cimg = img.copy()
-                web.col1.image(img)
-                cimg = converter.mosaic(cimg, web.slider)
-                if web.no_convert == False:
-                    cimg = converter.convert(cimg, web.color)
-                if web.edge_filter:
-                    cimg = converter.anime_filter(cimg, web.anime_th1, web.anime_th2)
-                web.col2.image(cimg, use_column_width=True)
-        st.success('Done!', icon="✅")
-    elif default == False:
-        with st.spinner('Wait for it...'):
-            if web.custom:
-                img = Image.open("sample/irasutoya.png")
-                img = np.array(img)
-                height, width = img.shape[:2]
-                cimg = img.copy()
-                web.col1.image(img)
-                cimg = converter.mosaic(cimg, web.slider)
-                if web.no_convert == False:
-                    cimg = converter.convert(cimg, "Custom", web.rgblist)
-                if web.edge_filter:
-                    cimg = converter.anime_filter(cimg, web.anime_th1, web.anime_th2)
-                web.col2.image(cimg, use_column_width=True)
-            else:
-                img = Image.open("sample/irasutoya.png")
-                img = np.array(img)
-                height, width = img.shape[:2]
-                cimg = img.copy()
-                web.col1.image(img)
-                cimg = converter.mosaic(cimg, web.slider)
-                if web.no_convert == False:
-                    cimg = converter.convert(cimg, web.color)
-                if web.edge_filter:
-                    cimg = converter.anime_filter(cimg, web.anime_th1, web.anime_th2)
-                web.col2.image(cimg, use_column_width=True)
+                cimg = converter.convert(cimg, web.color)
+        if web.edge_filter:
+            cimg = converter.anime_filter(cimg, web.anime_th1, web.anime_th2)
+        web.col2.image(cimg, use_column_width=True)
         st.success('Done!', icon="✅")
