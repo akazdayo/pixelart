@@ -110,10 +110,6 @@ class Converter():
         # 輪郭画像をRGB色空間に変換
         edge = cv2.cvtColor(edge, cv2.COLOR_GRAY2BGR)
 
-        # 画像の減色処理
-        # bgr = np.array(bgr/K, dtype=np.uint8)
-        # bgr = np.array(bgr*K, dtype=np.uint8)
-
         # 差分を返す
         result = cv2.subtract(bgr, edge)
 
