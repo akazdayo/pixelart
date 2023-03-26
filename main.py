@@ -169,19 +169,10 @@ class Web():
             self.more_options()
         with st.expander("Custom pallet"):
             self.custom_pallet()
+        with st.expander("Experimental Features"):
+            self.experimental()
 
-        # with st.expander("Experimental Features"):
-        #    self.experimental()
         st.write("Source Code : https://github.com/akazdayo/pixelart")
-
-    def more_options(self):
-        self.edge_filter = st.checkbox('Anime Filter', True)
-        self.anime_th1 = st.slider('Select threhsold1(minVal)', 0.0, 500.0, 0.0, 5.0,
-                                   help="The smaller the value, the more edges there are.(using cv2.Canny)", disabled=not self.edge_filter)
-        self.anime_th2 = st.slider('Select threhsold2(maxVal)', 0.0, 500.0, 0.0, 5.0,
-                                   help="The smaller the value, the more edges there are.(using cv2.Canny)", disabled=not self.edge_filter)
-        self.no_convert = st.checkbox('No Color Convert')
-        self.decreaseColor = st.checkbox('decrease Color')
 
     def share(self):
         components.html(
@@ -239,6 +230,20 @@ class Web():
         st.write("""
             The following features are experimental and subject to errors and bugs.
             """)
+        self.pixel_edge = st.checkbox("Pixel Edge")
+        self.px_th1 = st.slider('Select Pixel threhsold1(minVal)', 0.0, 500.0, 0.0, 5.0,
+                                help="The smaller the value, the more edges there are.(using cv2.Canny)", disabled=not self.pixel_edge)
+        self.px_th2 = st.slider('Select Pixel threhsold2(maxVal)', 0.0, 500.0, 0.0, 5.0,
+                                help="The smaller the value, the more edges there are.(using cv2.Canny)", disabled=not self.pixel_edge)
+
+    def more_options(self):
+        self.edge_filter = st.checkbox('Anime Filter', True)
+        self.anime_th1 = st.slider('Select threhsold1(minVal)', 0.0, 500.0, 0.0, 5.0,
+                                   help="The smaller the value, the more edges there are.(using cv2.Canny)", disabled=not self.edge_filter)
+        self.anime_th2 = st.slider('Select threhsold2(maxVal)', 0.0, 500.0, 0.0, 5.0,
+                                   help="The smaller the value, the more edges there are.(using cv2.Canny)", disabled=not self.edge_filter)
+        self.no_convert = st.checkbox('No Color Convert')
+        self.decreaseColor = st.checkbox('decrease Color')
 
     def get_image(self, upload):
         img = Image.open(upload)
@@ -259,6 +264,8 @@ if __name__ == "__main__":
         height, width = img.shape[:2]
         cimg = img.copy()
         web.col1.image(img)
+        if web.pixel_edge:
+            cimg = converter.anime_filter(cimg, web.px_th1, web.px_th2)
         cimg = converter.mosaic(cimg, web.slider)
         if web.no_convert == False:
             if web.custom:
