@@ -28,9 +28,7 @@ It does not support attaching images.
 When attaching an image, please copy the image or download the image and attach it.  
 If you do not turn off the tracker blocker, it may not be displayed.  
 
-# Experimental Features
-This is not an official feature yet, so there may be bugs or errors.  
-
+# More Options
 ## Anime Filter
 Add edges.  
 ![animefilter_on](./image/anime.png)
@@ -53,6 +51,11 @@ The smaller the value, the more edges are processed.
 Specifies the amount of edges.
 ### threhsold 2
 Specifies the length of edges.
+
+# Experimental Features
+This is not an official feature yet, so there may be bugs or errors.  
+## Pixel Edge
+Generate edges with dots.
 
 # Color Sample
 Displays the colors in the default color palette  
