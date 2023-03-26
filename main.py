@@ -164,12 +164,24 @@ class Web():
         self.col1, self.col2 = st.columns(2)
         self.col1.header("Original img")
         self.col2.header("Convert img")
+
+        with st.expander("More Options", True):
+            self.more_options()
         with st.expander("Custom pallet"):
             self.custom_pallet()
 
-        with st.expander("Experimental Features"):
-            self.experimental()
+        # with st.expander("Experimental Features"):
+        #    self.experimental()
         st.write("Source Code : https://github.com/akazdayo/pixelart")
+
+    def more_options(self):
+        self.edge_filter = st.checkbox('Anime Filter', True)
+        self.anime_th1 = st.slider('Select threhsold1(minVal)', 0.0, 500.0, 0.0, 5.0,
+                                   help="The smaller the value, the more edges there are.(using cv2.Canny)", disabled=not self.edge_filter)
+        self.anime_th2 = st.slider('Select threhsold2(maxVal)', 0.0, 500.0, 0.0, 5.0,
+                                   help="The smaller the value, the more edges there are.(using cv2.Canny)", disabled=not self.edge_filter)
+        self.no_convert = st.checkbox('No Color Convert')
+        self.decreaseColor = st.checkbox('decrease Color')
 
     def share(self):
         components.html(
@@ -227,13 +239,6 @@ class Web():
         st.write("""
             The following features are experimental and subject to errors and bugs.
             """)
-        self.edge_filter = st.checkbox('Anime Filter')
-        self.no_convert = st.checkbox('No Color Convert')
-        self.decreaseColor = st.checkbox('decrease Color')
-        self.anime_th1 = st.slider('Select threhsold1(minVal)', 0.0, 500.0, 250.0, 5.0,
-                                   help="The smaller the value, the more edges there are.(using cv2.Canny)", disabled=not self.edge_filter)
-        self.anime_th2 = st.slider('Select threhsold2(maxVal)', 0.0, 500.0, 250.0, 5.0,
-                                   help="The smaller the value, the more edges there are.(using cv2.Canny)", disabled=not self.edge_filter)
 
     def get_image(self, upload):
         img = Image.open(upload)
