@@ -5,9 +5,11 @@ Language : [English](README.md)
 このサイトでは、色を変換しています。  
 色を変換するときに使用するカラーパレットを選択します。  
 Pyxelは[Pyxel](https://github.com/kitao/pyxel)というライブラリで使用されている色です。  
+![Color pallet](./image/pallet.png)
 
 ## ratio
 0.01ずつ調整できるスライダーで、数字が少なくなるほどドットが大きくなります。
+![Select ratio](./image/ratio.png)
 
 ## Custom Pallet
 ColorPalletを自分で作成できます。  
@@ -15,6 +17,7 @@ ColorPalletを自分で作成できます。
 表に入力した色は右側に表示されます。  
 表の上にあるカラーピッカーから色を選択してカラーコードをコピーし、入力すると楽です。  
 ※スポイトには対応していません
+![Custom pallet](./image/custom.png)
 
 ## Tweet
 ツイッターにツイートするボタンです。  
@@ -28,11 +31,17 @@ ColorPalletを自分で作成できます。
 ## Anime Filter
 エッジを追加します。  
 アニメっぽくなるかもしれないです。
+![animefilter_on](./image/anime.png)
+![animefilter_off](./image/anime2.jpg)
+
 ## No Color Convert
 カラーパレットを使用しないようにします。  
+![no_convert](./image/no_convert.jpg)
+
 ## decrease Color
 減色処理をします。  
 基本的には、``No Color Convert``と一緒に使用します。
+![decrease_color](./image/decrease.jpg)
 
 ## threhsold
 AnimeFilter(エッジ処理)の値です。  
@@ -44,3 +53,4 @@ AnimeFilter(エッジ処理)の値です。
 
 # Color Sample
 デフォルトのカラーパレットに含まれている色を表示します  
+![color_sample](./image/sample.png)
