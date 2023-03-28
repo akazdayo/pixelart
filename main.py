@@ -155,6 +155,7 @@ class Web():
         )
         fdir = self.file_dir()
         st.title("PixelArt-Converter")
+        self.message = st.empty()
         self.upload = st.file_uploader("Upload Image", type=['jpg', 'jpeg', 'png', 'webp'])
         self.color = st.selectbox("Select color pallet", fdir)
         self.slider = st.slider('Select ratio', 0.01, 1.0, 0.3, 0.01)
@@ -276,6 +277,5 @@ if __name__ == "__main__":
             if web.edge_filter:
                 cimg = converter.anime_filter(cimg, web.anime_th1, web.anime_th2)
             web.col2.image(cimg, use_column_width=True)
-            st.success('Done!', icon="✅")
         else:
-            st.error("Upload file is to large")
+            web.message.error("Upload file is to large")
