@@ -29,6 +29,7 @@ from PIL import Image
 import csv
 import os
 import pandas as pd
+import math
 
 
 class Converter():
@@ -60,15 +61,6 @@ class Converter():
         return color_name
 
     def mosaic(self, img, ratio=0.1):
-        """# mosaic
-
-        Args:
-            img (_type_): _description_
-            ratio (float, optional): _description_. Defaults to 0.1.
-
-        Returns:
-            _type_: _description_
-        """
         small = cv2.resize(img, None, fx=ratio, fy=ratio, interpolation=cv2.INTER_NEAREST)
         return cv2.resize(small, img.shape[:2][::-1], interpolation=cv2.INTER_NEAREST)
 
@@ -84,13 +76,21 @@ class Converter():
                 return
             color_pallet = custom
 
+        # progress = st.progress(0)
+
         for height in range(h):
             for width in range(w):
                 color = self.color_change(img[width][height][0], img[width][height][1], img[width][height][2], color_pallet)
                 changed[width][height][0] = color[0]  # 赤
                 changed[width][height][1] = color[1]  # 緑
                 changed[width][height][2] = color[2]  # 青
+                # progress = self.update_progress(height*width, progress, h*w)
         return changed
+
+    def update_progress(self, count, pgbar, hw):
+        percent = int((count/hw)*100)
+        pgbar.progress(percent)
+        return pgbar
 
     def anime_filter(self, img, th1=50, th2=150):
         # アルファチャンネルを分離
@@ -254,27 +254,28 @@ class Web():
 if __name__ == "__main__":
     web = Web()
     converter = Converter()
-    default = False  # サンプル画像を一度のみ表示
     with st.spinner('Wait for it...'):
         if web.upload != None:
             img = web.get_image(web.upload)
-        elif default == False:
+        else:
             img = web.get_image("sample/irasutoya.png")
-            default = True
         height, width = img.shape[:2]
-        cimg = img.copy()
-        web.col1.image(img)
-        if web.pixel_edge:
-            cimg = converter.anime_filter(cimg, web.px_th1, web.px_th2)
-        cimg = converter.mosaic(cimg, web.slider)
-        if web.no_convert == False:
-            if web.custom:
-                cimg = converter.convert(cimg, "Custom", web.rgblist)
-            else:
-                cimg = converter.convert(cimg, web.color)
-        if web.decreaseColor:
-            cimg = converter.decreaseColor(cimg)
-        if web.edge_filter:
-            cimg = converter.anime_filter(cimg, web.anime_th1, web.anime_th2)
-        web.col2.image(cimg, use_column_width=True)
-        st.success('Done!', icon="✅")
+        if height*width < 8300000:
+            cimg = img.copy()
+            web.col1.image(img)
+            if web.pixel_edge:
+                cimg = converter.anime_filter(cimg, web.px_th1, web.px_th2)
+            cimg = converter.mosaic(cimg, web.slider)
+            if web.no_convert == False:
+                if web.custom:
+                    cimg = converter.convert(cimg, "Custom", web.rgblist)
+                else:
+                    cimg = converter.convert(cimg, web.color)
+            if web.decreaseColor:
+                cimg = converter.decreaseColor(cimg)
+            if web.edge_filter:
+                cimg = converter.anime_filter(cimg, web.anime_th1, web.anime_th2)
+            web.col2.image(cimg, use_column_width=True)
+            st.success('Done!', icon="✅")
+        else:
+            st.error("Upload file is to large")
