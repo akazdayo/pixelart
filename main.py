@@ -278,4 +278,7 @@ if __name__ == "__main__":
                 cimg = converter.anime_filter(cimg, web.anime_th1, web.anime_th2)
             web.col2.image(cimg, use_column_width=True)
         else:
-            web.message.error("Upload file is to large")
+            web.message.error("""
+            File is too large.
+            File size must be less than 10MB and pixel count up to 4K(8,300,000).
+            """)
