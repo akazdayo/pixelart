@@ -29,14 +29,16 @@ from PIL import Image
 import csv
 import os
 import pandas as pd
-import math
+from sklearn.cluster import KMeans
+import warnings
+import gc
+
+warnings.simplefilter('ignore')
 
 
 class Converter():
     def __init__(self) -> None:
         self.color_dict = {}
-        self.counter = 0
-        self.counterr = 0
 
     def read_csv(self, path):
         with open(path) as f:
@@ -44,20 +46,18 @@ class Converter():
             color = [[int(v) for v in row] for row in reader]
             return color
 
-    def color_change(self, r, g, b, color_pallet):
+    def color_change(self, r, g, b, color_palette):
         if (r, g, b) in self.color_dict:
-            self.counter += 1
             return self.color_dict[(r, g, b)]
         # 最も近い色を見つける
         min_distance = float('inf')
         color_name = None
-        for color in color_pallet:
+        for color in color_palette:
             distance = (int(r) - color[0]) ** 2 + (int(g) - color[1]) ** 2 + (int(b) - color[2]) ** 2
             if distance < min_distance:
                 min_distance = distance
                 color_name = color
         self.color_dict[(r, g, b)] = color_name
-        self.counterr += 1
         return color_name
 
     def mosaic(self, img, ratio=0.1):
@@ -68,29 +68,21 @@ class Converter():
         w, h = img.shape[:2]
         changed = img.copy()
         # 選択されたcsvファイルを読み込む
-        color_pallet = []
+        color_palette = []
         if option != "Custom":
-            color_pallet = self.read_csv("./color/"+option+".csv")
+            color_palette = self.read_csv("./color/"+option+".csv")
         else:
             if custom == [] or custom == None:
                 return
-            color_pallet = custom
-
-        # progress = st.progress(0)
+            color_palette = custom
 
         for height in range(h):
             for width in range(w):
-                color = self.color_change(img[width][height][0], img[width][height][1], img[width][height][2], color_pallet)
+                color = self.color_change(img[width][height][0], img[width][height][1], img[width][height][2], color_palette)
                 changed[width][height][0] = color[0]  # 赤
                 changed[width][height][1] = color[1]  # 緑
                 changed[width][height][2] = color[2]  # 青
-                # progress = self.update_progress(height*width, progress, h*w)
         return changed
-
-    def update_progress(self, count, pgbar, hw):
-        percent = int((count/hw)*100)
-        pgbar.progress(percent)
-        return pgbar
 
     def anime_filter(self, img, th1=50, th2=150):
         # アルファチャンネルを分離
@@ -156,20 +148,22 @@ class Web():
         fdir = self.file_dir()
         st.title("PixelArt-Converter")
         self.message = st.empty()
-        self.upload = st.file_uploader("Upload Image", type=['jpg', 'jpeg', 'png', 'webp'])
-        self.color = st.selectbox("Select color pallet", fdir)
+        self.upload = st.file_uploader("Upload Image", type=['jpg', 'jpeg', 'png', 'webp', 'jfif'])
+        self.color = st.selectbox("Select color Palette", fdir)
         self.slider = st.slider('Select ratio', 0.01, 1.0, 0.3, 0.01)
-        self.custom = st.checkbox('Custom Pallet')
+        self.custom = st.checkbox('Custom Palette')
+        self.use_ai = st.checkbox('Use AI')
         self.share()
 
         self.col1, self.col2 = st.columns(2)
         self.col1.header("Original img")
         self.col2.header("Convert img")
+        self.now = st.empty()
 
         with st.expander("More Options", True):
             self.more_options()
-        with st.expander("Custom pallet"):
-            self.custom_pallet()
+        with st.expander("Custom Palette"):
+            self.custom_palette()
         with st.expander("Experimental Features"):
             self.experimental()
 
@@ -196,19 +190,32 @@ class Web():
             rgb_values.append(self.hex_to_rgb(hex_code[1:]))
         return rgb_values
 
-    def custom_pallet(self):
-        st.title("Add pallet")
-        _ = st.color_picker('Pick A Color', '#ffffff')
+    def getMainColor(self, img, color, iter):
+        img = cv2.cvtColor(img, cv2.COLOR_RGBA2RGB)
+        img = img.reshape(
+            (img.shape[0] * img.shape[1], 3))
+        cluster = KMeans(n_clusters=color, max_iter=iter)
+        cluster.fit(X=img)
+        cluster_centers_arr = cluster.cluster_centers_.astype(
+            int, copy=False)
+        hexlist = []
+
+        for rgb_arr in cluster_centers_arr:
+            hexlist.append('#%02x%02x%02x' % tuple(rgb_arr))
+        return hexlist
+
+    def custom_palette(self, df=pd.DataFrame(
+        [
+            {"hex": "#FF0000"},
+            {"hex": "#00FF00"},
+            {"hex": "#0000FF"},
+            {"hex": "#FFFFFF"},
+            {"hex": "#000000"},
+        ]
+    )):
+        st.title("Add Palette")
+        # _ = st.color_picker('Pick A Color', '#ffffff')
         col1, col2 = st.columns(2)
-        df = pd.DataFrame(
-            [
-                {"hex": "#FF0000"},
-                {"hex": "#00FF00"},
-                {"hex": "#0000FF"},
-                {"hex": "#FFFFFF"},
-                {"hex": "#000000"},
-            ]
-        )
         self.edited_df = col1.experimental_data_editor(df, num_rows="dynamic")
         self.rgblist = list()
         for i in range(len(self.edited_df.loc[self.edited_df["hex"].keys()])):
@@ -217,10 +224,10 @@ class Web():
         self.show_custom(col2)
 
     def show_custom(self, col):
-        color_pallet = [item[0] for item in self.rgblist]
-        color_pallet = self.hex_to_rgblist(color_pallet)
+        color_palette = [item[0] for item in self.rgblist]
+        color_palette = self.hex_to_rgblist(color_palette)
         rgb = []
-        for i in color_pallet:
+        for i in color_palette:
             color = np.zeros((50, 50, 3), dtype=np.uint8)
             color[:, :] = [i[0], i[1], i[2]]
             col.image(color)
@@ -236,6 +243,10 @@ class Web():
                                 help="The smaller the value, the more edges there are.(using cv2.Canny)", disabled=not self.pixel_edge)
         self.px_th2 = st.slider('Select Pixel threhsold2(maxVal)', 0.0, 500.0, 0.0, 5.0,
                                 help="The smaller the value, the more edges there are.(using cv2.Canny)", disabled=not self.pixel_edge)
+        st.title("AI")
+        self.color_number = st.slider("AI Color", 1, 20, 8, 1, help="Number of colors")
+        self.ai_iter = st.slider("AI Number of attempts", 1, 300, 150, 1,
+                                 help="Maximum number of iterations of the k-means algorithm for a single run.")
 
     def more_options(self):
         self.edge_filter = st.checkbox('Anime Filter', True)
@@ -265,18 +276,31 @@ if __name__ == "__main__":
             cimg = img.copy()
             web.col1.image(img)
             if web.pixel_edge:
+                web.now.write("### Pixel Edge in progress")
                 cimg = converter.anime_filter(cimg, web.px_th1, web.px_th2)
+            web.now.write("### Now mosaic")
             cimg = converter.mosaic(cimg, web.slider)
             if web.no_convert == False:
-                if web.custom:
+                if web.custom or web.use_ai:
+                    if web.use_ai:
+                        web.now.write("### AI Palette in progress")
+                        ai_color = web.getMainColor(cimg, web.color_number, web.ai_iter)
+                        web.custom_palette(pd.DataFrame({"hex": c} for c in ai_color))
+                    web.now.write("### Color Convert in progress")
                     cimg = converter.convert(cimg, "Custom", web.rgblist)
                 else:
+                    web.now.write("### Color Convert in progress")
                     cimg = converter.convert(cimg, web.color)
             if web.decreaseColor:
+                web.now.write("### Decrease Color in progress")
                 cimg = converter.decreaseColor(cimg)
             if web.edge_filter:
+                web.now.write("### Edge filter in progress")
                 cimg = converter.anime_filter(cimg, web.anime_th1, web.anime_th2)
             web.col2.image(cimg, use_column_width=True)
+            web.now.write("")
+            del converter.color_dict
+            gc.collect()
         else:
             web.message.error("""
             File is too large.

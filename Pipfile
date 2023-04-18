@@ -8,6 +8,7 @@ streamlit = "*"
 opencv-python-headless = "*"
 numpy = "*"
 pillow = "*"
+scikit-learn = "*"
 
 [dev-packages]
 opencv-python = "*"
