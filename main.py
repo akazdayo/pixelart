@@ -1,26 +1,3 @@
-"""
-Class Converter
-・色の変換
-・モザイク処理
-
-
-Class Web
-・描画(タイトル, アップロードボタン)
-・画像の取得・Numpy配列に変換
-・プログレスバー
-
-main
-・Converter呼び出し
-・Web呼び出し
-・画像を配列に変換
-・変換後の画像を描画
-----
-追加したいもの
-csv追加したら自動的に読み込まれる(完成)
-色を確認できるようにする(完成)
-すでに変換したものは保存して、早くする(完成)
-csvの追加
-"""
 import streamlit as st
 import streamlit.components.v1 as components
 import numpy as np
@@ -190,20 +167,6 @@ class Web():
             rgb_values.append(self.hex_to_rgb(hex_code[1:]))
         return rgb_values
 
-    def getMainColor(self, img, color, iter):
-        img = cv2.cvtColor(img, cv2.COLOR_RGBA2RGB)
-        img = img.reshape(
-            (img.shape[0] * img.shape[1], 3))
-        cluster = KMeans(n_clusters=color, max_iter=iter)
-        cluster.fit(X=img)
-        cluster_centers_arr = cluster.cluster_centers_.astype(
-            int, copy=False)
-        hexlist = []
-
-        for rgb_arr in cluster_centers_arr:
-            hexlist.append('#%02x%02x%02x' % tuple(rgb_arr))
-        return hexlist
-
     def custom_palette(self, df=pd.DataFrame(
         [
             {"hex": "#FF0000"},
@@ -245,7 +208,7 @@ class Web():
                                 help="The smaller the value, the more edges there are.(using cv2.Canny)", disabled=not self.pixel_edge)
         st.title("AI")
         self.color_number = st.slider("AI Color", 1, 20, 8, 1, help="Number of colors")
-        self.ai_iter = st.slider("AI Number of attempts", 1, 300, 150, 1,
+        self.ai_iter = st.slider("AI Number of attempts", 1, 3000, 150, 1,
                                  help="Maximum number of iterations of the k-means algorithm for a single run.")
 
     def more_options(self):
@@ -261,6 +224,22 @@ class Web():
         img = Image.open(upload)
         img_array = np.array(img)
         return img_array
+
+
+@st.cache_resource
+def getMainColor(img, color, iter):
+    img = cv2.cvtColor(img, cv2.COLOR_RGBA2RGB)
+    img = img.reshape(
+        (img.shape[0] * img.shape[1], 3))
+    cluster = KMeans(n_clusters=color, max_iter=iter)
+    cluster.fit(X=img)
+    cluster_centers_arr = cluster.cluster_centers_.astype(
+        int, copy=False)
+    hexlist = []
+
+    for rgb_arr in cluster_centers_arr:
+        hexlist.append('#%02x%02x%02x' % tuple(rgb_arr))
+    return hexlist
 
 
 if __name__ == "__main__":
@@ -284,7 +263,7 @@ if __name__ == "__main__":
                 if web.custom or web.use_ai:
                     if web.use_ai:
                         web.now.write("### AI Palette in progress")
-                        ai_color = web.getMainColor(cimg, web.color_number, web.ai_iter)
+                        ai_color = getMainColor(cimg, web.color_number, web.ai_iter)
                         web.custom_palette(pd.DataFrame({"hex": c} for c in ai_color))
                     web.now.write("### Color Convert in progress")
                     cimg = converter.convert(cimg, "Custom", web.rgblist)
