@@ -42,24 +42,23 @@ class Converter():
         return cv2.resize(small, img.shape[:2][::-1], interpolation=cv2.INTER_NEAREST)
 
     def convert(self, img, option, custom=None):
-        width, height = img.shape[:2]
+        w, h = img.shape[:2]
         changed = img.copy()
-        # Read selected csv files
-        color_pallet = []
+        # 選択されたcsvファイルを読み込む
+        color_palette = []
         if option != "Custom":
-            color_pallet = self.read_csv("./color/"+option+".csv")
+            color_palette = self.read_csv("./color/"+option+".csv")
         else:
             if custom == [] or custom == None:
                 return
-            color_pallet = custom
+            color_palette = custom
 
-        for y in range(height):
-            for x in range(width):
-                old_r, old_g, old_b = img[x][y][:-1]
-                new_r, new_g, new_b = self.color_change(old_r, old_g, old_b, color_pallet)
-                changed[x][y][0] = new_r
-                changed[x][y][1] = new_g
-                changed[x][y][2] = new_b
+        for height in range(h):
+            for width in range(w):
+                color = self.color_change(img[width][height][0], img[width][height][1], img[width][height][2], color_palette)
+                changed[width][height][0] = color[0]  # 赤
+                changed[width][height][1] = color[1]  # 緑
+                changed[width][height][2] = color[2]  # 青
         return changed
 
     def anime_filter(self, img, th1=50, th2=150):
