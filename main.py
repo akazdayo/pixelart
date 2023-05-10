@@ -102,6 +102,15 @@ class Converter():
 
         return dst
 
+    def resize_image(self, img):
+        img_size = img.shape[0] * img.shape[1]
+        if img_size > 8300000:
+            ratio = (img_size / 8300000) ** 0.5
+            new_height = int(img.shape[0] / ratio)
+            new_width = int(img.shape[1] / ratio)
+            img = cv2.resize(img, (new_width, new_height))
+        return img
+
 
 class Web():
     def __init__(self) -> None:
@@ -256,36 +265,40 @@ if __name__ == "__main__":
             img = web.get_image("sample/irasutoya.png")
         height, width = img.shape[:2]
         if height*width < 8300000:
-            cimg = img.copy()
-            web.col1.image(img)
-            if web.pixel_edge:
-                web.now.write("### Pixel Edge in progress")
-                cimg = converter.anime_filter(cimg, web.px_th1, web.px_th2)
-            web.now.write("### Now mosaic")
-            cimg = converter.mosaic(cimg, web.slider)
-            if web.no_convert == False:
-                if web.custom or web.use_ai:
-                    if web.use_ai:
-                        web.now.write("### AI Palette in progress")
-                        ai_color = getMainColor(cimg, web.color_number, web.ai_iter)
-                        web.custom_palette(pd.DataFrame({"hex": c} for c in ai_color))
-                    web.now.write("### Color Convert in progress")
-                    cimg = converter.convert(cimg, "Custom", web.rgblist)
-                else:
-                    web.now.write("### Color Convert in progress")
-                    cimg = converter.convert(cimg, web.color)
-            if web.decreaseColor:
-                web.now.write("### Decrease Color in progress")
-                cimg = converter.decreaseColor(cimg)
-            if web.edge_filter:
-                web.now.write("### Edge filter in progress")
-                cimg = converter.anime_filter(cimg, web.anime_th1, web.anime_th2)
-            web.col2.image(cimg, use_column_width=True)
-            web.now.write("")
-            del converter.color_dict
-            gc.collect()
+            pass
         else:
-            web.message.error("""
-            File is too large.
-            File size must be less than 10MB and pixel count up to 4K(8,300,000).
+            img = converter.resize_image(img)
+            web.message.warning("""
+The size of the image has been reduced because the file size is too large.\n
+Image size is reduced if the number of pixels exceeds 4K (8,300,000).
             """)
+        cimg = img.copy()
+        del img
+        del web.upload
+        web.col1.image(cimg)
+        if web.pixel_edge:
+            web.now.write("### Pixel Edge in progress")
+            cimg = converter.anime_filter(cimg, web.px_th1, web.px_th2)
+        web.now.write("### Now mosaic")
+        cimg = converter.mosaic(cimg, web.slider)
+        if web.no_convert == False:
+            if web.custom or web.use_ai:
+                if web.use_ai:
+                    web.now.write("### AI Palette in progress")
+                    ai_color = getMainColor(cimg, web.color_number, web.ai_iter)
+                    web.custom_palette(pd.DataFrame({"hex": c} for c in ai_color))
+                web.now.write("### Color Convert in progress")
+                cimg = converter.convert(cimg, "Custom", web.rgblist)
+            else:
+                web.now.write("### Color Convert in progress")
+                cimg = converter.convert(cimg, web.color)
+        if web.decreaseColor:
+            web.now.write("### Decrease Color in progress")
+            cimg = converter.decreaseColor(cimg)
+        if web.edge_filter:
+            web.now.write("### Edge filter in progress")
+            cimg = converter.anime_filter(cimg, web.anime_th1, web.anime_th2)
+        web.col2.image(cimg, use_column_width=True)
+        web.now.write("")
+        del converter.color_dict
+        gc.collect()
