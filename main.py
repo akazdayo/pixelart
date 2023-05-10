@@ -30,7 +30,8 @@ class Converter():
         min_distance = float('inf')
         color_name = None
         for color in color_palette:
-            distance = (int(r) - color[0]) ** 2 + (int(g) - color[1]) ** 2 + (int(b) - color[2]) ** 2
+            distance = (int(r) - color[0]) ** 2 + (int(g) -
+                                                   color[1]) ** 2 + (int(b) - color[2]) ** 2
             if distance < min_distance:
                 min_distance = distance
                 color_name = color
@@ -38,7 +39,8 @@ class Converter():
         return color_name
 
     def mosaic(self, img, ratio=0.1):
-        small = cv2.resize(img, None, fx=ratio, fy=ratio, interpolation=cv2.INTER_NEAREST)
+        small = cv2.resize(img, None, fx=ratio, fy=ratio,
+                           interpolation=cv2.INTER_NEAREST)
         return cv2.resize(small, img.shape[:2][::-1], interpolation=cv2.INTER_NEAREST)
 
     def convert(self, img, option, custom=None):
@@ -55,7 +57,8 @@ class Converter():
 
         for height in range(h):
             for width in range(w):
-                color = self.color_change(img[width][height][0], img[width][height][1], img[width][height][2], color_palette)
+                color = self.color_change(
+                    img[width][height][0], img[width][height][1], img[width][height][2], color_palette)
                 changed[width][height][0] = color[0]  # 赤
                 changed[width][height][1] = color[1]  # 緑
                 changed[width][height][2] = color[2]  # 青
@@ -104,8 +107,8 @@ class Converter():
 
     def resize_image(self, img):
         img_size = img.shape[0] * img.shape[1]
-        if img_size > 8300000:
-            ratio = (img_size / 8300000) ** 0.5
+        if img_size > 2073600:
+            ratio = (img_size / 2073600) ** 0.5
             new_height = int(img.shape[0] / ratio)
             new_width = int(img.shape[1] / ratio)
             img = cv2.resize(img, (new_width, new_height))
@@ -135,8 +138,10 @@ class Web():
         st.title("PixelArt-Converter")
         self.message = st.empty()
         self.use_ai = False
-        self.upload = st.file_uploader("Upload Image", type=['jpg', 'jpeg', 'png', 'webp', 'jfif'])
-        self.color = st.selectbox("Select color Palette", fdir, disabled=self.use_ai)
+        self.upload = st.file_uploader(
+            "Upload Image", type=['jpg', 'jpeg', 'png', 'webp', 'jfif'])
+        self.color = st.selectbox(
+            "Select color Palette", fdir, disabled=self.use_ai)
         self.slider = st.slider('Select ratio', 0.01, 1.0, 0.3, 0.01)
         self.custom = st.checkbox('Custom Palette')
         self.use_ai = st.checkbox('Use AI')
@@ -193,7 +198,8 @@ class Web():
         self.rgblist = list()
         for i in range(len(self.edited_df.loc[self.edited_df["hex"].keys()])):
             self.rgblist.append([])
-            self.rgblist[i].append((self.edited_df.loc[self.edited_df.index[i]]["hex"]))
+            self.rgblist[i].append(
+                (self.edited_df.loc[self.edited_df.index[i]]["hex"]))
         self.show_custom(col2)
 
     def show_custom(self, col):
@@ -217,7 +223,8 @@ class Web():
         self.px_th2 = st.slider('Select Pixel threhsold2(maxVal)', 0.0, 500.0, 0.0, 5.0,
                                 help="The smaller the value, the more edges there are.(using cv2.Canny)", disabled=not self.pixel_edge)
         st.title("AI")
-        self.color_number = st.slider("AI Color", 1, 20, 8, 1, help="Number of colors")
+        self.color_number = st.slider(
+            "AI Color", 1, 20, 8, 1, help="Number of colors")
         self.ai_iter = st.slider("AI Number of attempts", 1, 3000, 150, 1,
                                  help="Maximum number of iterations of the k-means algorithm for a single run.")
 
@@ -264,13 +271,13 @@ if __name__ == "__main__":
         else:
             img = web.get_image("sample/irasutoya.png")
         height, width = img.shape[:2]
-        if height*width < 8300000:
+        if height*width < 2073600:
             pass
         else:
             img = converter.resize_image(img)
             web.message.warning("""
 The size of the image has been reduced because the file size is too large.\n
-Image size is reduced if the number of pixels exceeds 4K (8,300,000).
+Image size is reduced if the number of pixels exceeds 2K (2,073,600).
             """)
         cimg = img.copy()
         del img
@@ -285,8 +292,10 @@ Image size is reduced if the number of pixels exceeds 4K (8,300,000).
             if web.custom or web.use_ai:
                 if web.use_ai:
                     web.now.write("### AI Palette in progress")
-                    ai_color = getMainColor(cimg, web.color_number, web.ai_iter)
-                    web.custom_palette(pd.DataFrame({"hex": c} for c in ai_color))
+                    ai_color = getMainColor(
+                        cimg, web.color_number, web.ai_iter)
+                    web.custom_palette(pd.DataFrame(
+                        {"hex": c} for c in ai_color))
                 web.now.write("### Color Convert in progress")
                 cimg = converter.convert(cimg, "Custom", web.rgblist)
             else:
