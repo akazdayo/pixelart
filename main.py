@@ -41,7 +41,8 @@ class Converter():
     def mosaic(self, img, ratio=0.1):
         small = cv2.resize(img, None, fx=ratio, fy=ratio,
                            interpolation=cv2.INTER_NEAREST)
-        return cv2.resize(small, img.shape[:2][::-1], interpolation=cv2.INTER_NEAREST)
+        # return cv2.resize(small, img.shape[:2][::-1], interpolation=cv2.INTER_NEAREST)
+        return small
 
     def convert(self, img, option, custom=None):
         w, h = img.shape[:2]
@@ -54,6 +55,7 @@ class Converter():
             if custom == [] or custom == None:
                 return
             color_palette = custom
+        print(color_palette)
 
         for height in range(h):
             for width in range(w):
@@ -113,6 +115,58 @@ class Converter():
             new_width = int(img.shape[1] / ratio)
             img = cv2.resize(img, (new_width, new_height))
         return img
+
+    def half_img(self, img):
+        h, w = img.shape[:2]
+        cx = 0
+        cy = 0
+        completed = []
+        for _ in range(2):
+            split_pic = img[cy:cy+int(h), cx:cx+int(w/2), :]
+            completed.append(split_pic)
+            cy = cy+int(h)
+            cy = 0
+            cx = cx+int(w/2)
+        return completed
+
+    def combine_img(self, img1, img2):
+        # 画像の高さと幅を取得
+        height, width, _ = img1.shape
+
+        # 新しい画像を作成する
+        new_img = np.zeros((height, width*2, 3), np.uint8)
+
+        # RGBからBGRに変換
+        img1 = cv2.cvtColor(img1, cv2.COLOR_RGB2BGR)
+        img2 = cv2.cvtColor(img2, cv2.COLOR_RGB2BGR)
+
+        # 画像を結合する
+        new_img[:, :width] = img1
+        new_img[:, width:] = cv2.resize(img2, (width, height))
+
+        new_img = cv2.cvtColor(new_img, cv2.COLOR_BGR2RGB)
+
+        return new_img
+
+    def add_number(self, img):
+        w, h = img.shape[:2]
+        converted = img.copy()
+        old_rgb = [converted[0][0][0], converted[0][0][1], converted[0][0][2]]
+        for height in range(h):
+            old_rgb = [converted[0][height][0], converted[0][height][1], converted[0][height][2]]
+            for width in range(w):
+                rgb = [converted[width][height][0], converted[width][height][1], converted[width][height][2]]
+                if old_rgb != rgb:
+                    converted[width][height][0], converted[width][height][1], converted[width][height][2] = 0, 0, 0
+                old_rgb = rgb
+        for width in range(w):
+            old_rgb = [converted[width][0][0], converted[width][0][1], converted[width][0][2]]
+            for height in range(h):
+                rgb = [converted[width][height][0], converted[width][height][1], converted[width][height][2]]
+                if old_rgb != rgb:
+                    converted[width][height][0], converted[width][height][1], converted[width][height][2] = 0, 0, 0
+                old_rgb = rgb
+        return converted
 
 
 class Web():
@@ -217,6 +271,7 @@ class Web():
         st.write("""
             The following features are experimental and subject to errors and bugs.
             """)
+        st.title("Pixel Edge")
         self.pixel_edge = st.checkbox("Pixel Edge")
         self.px_th1 = st.slider('Select Pixel threhsold1(minVal)', 0.0, 500.0, 0.0, 5.0,
                                 help="The smaller the value, the more edges there are.(using cv2.Canny)", disabled=not self.pixel_edge)
@@ -227,6 +282,8 @@ class Web():
             "AI Color", 1, 20, 8, 1, help="Number of colors")
         self.ai_iter = st.slider("AI Number of attempts", 1, 3000, 150, 1,
                                  help="Maximum number of iterations of the k-means algorithm for a single run.")
+        st.title("Split Image")
+        self.split = st.checkbox("Split Image")
 
     def more_options(self):
         self.edge_filter = st.checkbox('Anime Filter', True)
@@ -268,6 +325,8 @@ if __name__ == "__main__":
     with st.spinner('Wait for it...'):
         if web.upload != None:
             img = web.get_image(web.upload)
+            if web.split:
+                img = converter.half_img(img)[0]
         else:
             img = web.get_image("sample/irasutoya.png")
         height, width = img.shape[:2]
@@ -280,7 +339,7 @@ The size of the image has been reduced because the file size is too large.\n
 Image size is reduced if the number of pixels exceeds 2K (2,073,600).
             """)
         cimg = img.copy()
-        del img
+        # del img
         del web.upload
         web.col1.image(cimg)
         if web.pixel_edge:
@@ -307,6 +366,10 @@ Image size is reduced if the number of pixels exceeds 2K (2,073,600).
         if web.edge_filter:
             web.now.write("### Edge filter in progress")
             cimg = converter.anime_filter(cimg, web.anime_th1, web.anime_th2)
+        if web.split:
+            print("debug")
+            cimg = converter.combine_img(cimg, img[1])
+        cimg = converter.add_number(cimg)
         web.col2.image(cimg, use_column_width=True)
         web.now.write("")
         del converter.color_dict
