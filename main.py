@@ -179,7 +179,8 @@ class Web():
     def hex_to_rgblist(self, hex_list):
         rgb_values = []
         for hex_code in hex_list:
-            rgb_values.append(self.hex_to_rgb(hex_code[1:]))
+            if hex_code != None:
+                rgb_values.append(self.hex_to_rgb(hex_code[1:]))
         return rgb_values
 
     def custom_palette(self, df=pd.DataFrame(
@@ -194,7 +195,7 @@ class Web():
         st.title("Add Palette")
         # _ = st.color_picker('Pick A Color', '#ffffff')
         col1, col2 = st.columns(2)
-        self.edited_df = col1.experimental_data_editor(df, num_rows="dynamic")
+        self.edited_df = col1.data_editor(df, num_rows="dynamic")
         self.rgblist = list()
         for i in range(len(self.edited_df.loc[self.edited_df["hex"].keys()])):
             self.rgblist.append([])
