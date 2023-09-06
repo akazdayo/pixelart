@@ -41,8 +41,8 @@ class Converter():
     def mosaic(self, img, ratio=0.1):
         small = cv2.resize(img, None, fx=ratio, fy=ratio,
                            interpolation=cv2.INTER_NEAREST)
-        # return cv2.resize(small, img.shape[:2][::-1], interpolation=cv2.INTER_NEAREST)
-        return small
+        return cv2.resize(small, img.shape[:2][::-1], interpolation=cv2.INTER_NEAREST)
+        # return small
 
     def convert(self, img, option, custom=None):
         w, h = img.shape[:2]
@@ -55,7 +55,6 @@ class Converter():
             if custom == [] or custom == None:
                 return
             color_palette = custom
-        print(color_palette)
 
         for height in range(h):
             for width in range(w):
@@ -87,6 +86,36 @@ class Converter():
         # 差分を返す
         result = cv2.subtract(bgr, edge)
 
+        # アルファチャンネルを結合して返す
+        if len(img[0][0]) == 4:
+            return np.dstack([result, alpha])
+        else:
+            return result
+
+    def pxdog(self, img, size, p, sigma, eps, phi, k=1.6):
+        eps /= 255
+        g1 = cv2.GaussianBlur(img, (size, size), sigma)
+        g2 = cv2.GaussianBlur(img, (size, size), sigma*k)
+        d = (1 + p) * g1 - p * g2
+        d /= d.max()
+        e = 1 + np.tanh(phi*(d-eps))
+        e[e >= 1] = 1
+        return e * 255
+
+    def new_anime_filter(self, img):
+        # アルファチャンネルを分離
+        bg_image = img[:, :, :3]
+        if len(img[0][0]) == 4:
+            alpha = img[:, :, 3]
+        image = bg_image.copy()
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        image = np.array(image, dtype=np.float64)
+        image = self.pxdog(image, 17, 40, 1.4, 0, 15)
+        _, image = cv2.threshold(image, 200, 255, cv2.THRESH_BINARY)
+        a = np.array(image, np.uint8)
+        image = cv2.cvtColor(a, cv2.COLOR_RGB2BGR)
+        image = cv2.bitwise_not(image)
+        result = cv2.subtract(bg_image, image)
         # アルファチャンネルを結合して返す
         if len(img[0][0]) == 4:
             return np.dstack([result, alpha])
@@ -198,7 +227,7 @@ class Web():
             "Select color Palette", fdir, disabled=self.use_ai)
         self.slider = st.slider('Select ratio', 0.01, 1.0, 0.3, 0.01)
         self.custom = st.checkbox('Custom Palette')
-        self.use_ai = st.checkbox('Use AI')
+        self.use_ai = st.checkbox('Use AI', True)
         self.share()
 
         self.col1, self.col2 = st.columns(2)
@@ -233,7 +262,8 @@ class Web():
     def hex_to_rgblist(self, hex_list):
         rgb_values = []
         for hex_code in hex_list:
-            rgb_values.append(self.hex_to_rgb(hex_code[1:]))
+            if hex_code != None:
+                rgb_values.append(self.hex_to_rgb(hex_code[1:]))
         return rgb_values
 
     def custom_palette(self, df=pd.DataFrame(
@@ -248,7 +278,7 @@ class Web():
         st.title("Add Palette")
         # _ = st.color_picker('Pick A Color', '#ffffff')
         col1, col2 = st.columns(2)
-        self.edited_df = col1.experimental_data_editor(df, num_rows="dynamic")
+        self.edited_df = col1.data_editor(df, num_rows="dynamic")
         self.rgblist = list()
         for i in range(len(self.edited_df.loc[self.edited_df["hex"].keys()])):
             self.rgblist.append([])
@@ -271,26 +301,38 @@ class Web():
         st.write("""
             The following features are experimental and subject to errors and bugs.
             """)
-        st.title("Pixel Edge")
-        self.pixel_edge = st.checkbox("Pixel Edge")
-        self.px_th1 = st.slider('Select Pixel threhsold1(minVal)', 0.0, 500.0, 0.0, 5.0,
-                                help="The smaller the value, the more edges there are.(using cv2.Canny)", disabled=not self.pixel_edge)
-        self.px_th2 = st.slider('Select Pixel threhsold2(maxVal)', 0.0, 500.0, 0.0, 5.0,
-                                help="The smaller the value, the more edges there are.(using cv2.Canny)", disabled=not self.pixel_edge)
         st.title("AI")
         self.color_number = st.slider(
             "AI Color", 1, 20, 8, 1, help="Number of colors")
         self.ai_iter = st.slider("AI Number of attempts", 1, 3000, 150, 1,
                                  help="Maximum number of iterations of the k-means algorithm for a single run.")
-        st.title("Split Image")
-        self.split = st.checkbox("Split Image")
 
     def more_options(self):
-        self.edge_filter = st.checkbox('Anime Filter', True)
-        self.anime_th1 = st.slider('Select threhsold1(minVal)', 0.0, 500.0, 0.0, 5.0,
-                                   help="The smaller the value, the more edges there are.(using cv2.Canny)", disabled=not self.edge_filter)
-        self.anime_th2 = st.slider('Select threhsold2(maxVal)', 0.0, 500.0, 0.0, 5.0,
-                                   help="The smaller the value, the more edges there are.(using cv2.Canny)", disabled=not self.edge_filter)
+        st.title("Anime Filter")
+
+        st.subheader("LoG Filter")
+        px_col_log, smooth_col_log = st.columns(2)
+        self.smooth_log_filter = px_col_log.checkbox('Smooth LoG Filter')
+        self.px_log_filter = smooth_col_log.checkbox('Pixel LoG Filter', True)
+
+        st.subheader("Canny Filter", help="deprecated")
+        smooth_col_canny, px_col_canny,  = st.columns(2)
+
+        smooth_col_canny.subheader('Smooth Edge')
+        self.smooth_canny_filter = smooth_col_canny.checkbox('Smooth Canny Filter')
+        self.anime_th1 = smooth_col_canny.slider('Select threhsold1(minVal)', 0.0, 500.0, 0.0, 5.0,
+                                                 help="The smaller the value, the more edges there are.(using cv2.Canny)", disabled=not self.smooth_canny_filter)
+        self.anime_th2 = smooth_col_canny.slider('Select threhsold2(maxVal)', 0.0, 500.0, 0.0, 5.0,
+                                                 help="The smaller the value, the more edges there are.(using cv2.Canny)", disabled=not self.smooth_canny_filter)
+
+        px_col_canny.subheader('Pixel Edge')
+        self.pixel_canny_edge = px_col_canny.checkbox("Pixel Canny Filter")
+        self.px_th1 = px_col_canny.slider('Select Pixel threhsold1(minVal)', 0.0, 500.0, 100.0, 5.0,
+                                          help="The smaller the value, the more edges there are.(using cv2.Canny)", disabled=not self.pixel_canny_edge)
+        self.px_th2 = px_col_canny.slider('Select Pixel threhsold2(maxVal)', 0.0, 500.0, 100.0, 5.0,
+                                          help="The smaller the value, the more edges there are.(using cv2.Canny)", disabled=not self.pixel_canny_edge)
+
+        st.title("Convert Setting")
         self.no_convert = st.checkbox('No Color Convert')
         self.decreaseColor = st.checkbox('decrease Color')
 
@@ -322,55 +364,54 @@ def getMainColor(img, color, iter):
 if __name__ == "__main__":
     web = Web()
     converter = Converter()
-    with st.spinner('Wait for it...'):
-        if web.upload != None:
-            img = web.get_image(web.upload)
-            if web.split:
-                img = converter.half_img(img)[0]
-        else:
-            img = web.get_image("sample/irasutoya.png")
-        height, width = img.shape[:2]
-        if height*width < 2073600:
-            pass
-        else:
-            img = converter.resize_image(img)
-            web.message.warning("""
+    if web.upload != None:
+        img = web.get_image(web.upload)
+    else:
+        img = web.get_image("sample/irasutoya.png")
+    height, width = img.shape[:2]
+    if height*width < 2073600:
+        pass
+    else:
+        img = converter.resize_image(img)
+        web.message.warning("""
 The size of the image has been reduced because the file size is too large.\n
 Image size is reduced if the number of pixels exceeds 2K (2,073,600).
-            """)
-        cimg = img.copy()
-        # del img
-        del web.upload
-        web.col1.image(cimg)
-        if web.pixel_edge:
-            web.now.write("### Pixel Edge in progress")
-            cimg = converter.anime_filter(cimg, web.px_th1, web.px_th2)
-        web.now.write("### Now mosaic")
-        cimg = converter.mosaic(cimg, web.slider)
-        if web.no_convert == False:
-            if web.custom or web.use_ai:
-                if web.use_ai:
-                    web.now.write("### AI Palette in progress")
-                    ai_color = getMainColor(
-                        cimg, web.color_number, web.ai_iter)
-                    web.custom_palette(pd.DataFrame(
-                        {"hex": c} for c in ai_color))
-                web.now.write("### Color Convert in progress")
-                cimg = converter.convert(cimg, "Custom", web.rgblist)
-            else:
-                web.now.write("### Color Convert in progress")
-                cimg = converter.convert(cimg, web.color)
-        if web.decreaseColor:
-            web.now.write("### Decrease Color in progress")
-            cimg = converter.decreaseColor(cimg)
-        if web.edge_filter:
-            web.now.write("### Edge filter in progress")
-            cimg = converter.anime_filter(cimg, web.anime_th1, web.anime_th2)
-        if web.split:
-            print("debug")
-            cimg = converter.combine_img(cimg, img[1])
-        cimg = converter.add_number(cimg)
-        web.col2.image(cimg, use_column_width=True)
-        web.now.write("")
-        del converter.color_dict
-        gc.collect()
+        """)
+    cimg = img.copy()
+    # del img
+    del web.upload
+    web.col1.image(cimg)
+    if web.pixel_canny_edge:
+        web.now.write("### Pixel Edge in progress")
+        cimg = converter.anime_filter(cimg, web.px_th1, web.px_th2)
+    if web.px_log_filter:
+        web.now.write("### Pixel Edge in progress")
+        cimg = converter.new_anime_filter(cimg)
+    web.now.write("### Now mosaic")
+    cimg = converter.mosaic(cimg, web.slider)
+    if web.no_convert == False:
+        if web.custom or web.use_ai:
+            if web.use_ai:
+                web.now.write("### AI Palette in progress")
+                ai_color = getMainColor(
+                    cimg, web.color_number, web.ai_iter)
+                web.custom_palette(pd.DataFrame(
+                    {"hex": c} for c in ai_color))
+            web.now.write("### Color Convert in progress")
+            cimg = converter.convert(cimg, "Custom", web.rgblist)
+        else:
+            web.now.write("### Color Convert in progress")
+            cimg = converter.convert(cimg, web.color)
+    if web.decreaseColor:
+        web.now.write("### Decrease Color in progress")
+        cimg = converter.decreaseColor(cimg)
+    if web.smooth_canny_filter:
+        web.now.write("### Edge filter in progress")
+        cimg = converter.anime_filter(cimg, web.anime_th1, web.anime_th2)
+    if web.smooth_log_filter:
+        web.now.write("### Edge filter in progress")
+        cimg = converter.new_anime_filter(cimg)
+    web.col2.image(cimg, use_column_width=True)
+    web.now.write("")
+    del converter.color_dict
+    gc.collect()
