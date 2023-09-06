@@ -309,13 +309,14 @@ class Web():
 
     def more_options(self):
         st.title("Anime Filter")
+        st.write('Simultaneous application of the Canny and DoG filters is deprecated.')
 
-        st.subheader("LoG Filter")
-        px_col_log, smooth_col_log = st.columns(2)
-        self.smooth_log_filter = px_col_log.checkbox('Smooth LoG Filter')
-        self.px_log_filter = smooth_col_log.checkbox('Pixel LoG Filter', True)
+        st.subheader("Dog Filter")
+        px_col_dog, smooth_col_dog = st.columns(2)
+        self.smooth_dog_filter = px_col_dog.checkbox('Smooth Dog Filter')
+        self.px_dog_filter = smooth_col_dog.checkbox('Pixel Dog Filter', True)
 
-        st.subheader("Canny Filter", help="deprecated")
+        st.subheader("Canny Filter")
         smooth_col_canny, px_col_canny,  = st.columns(2)
 
         smooth_col_canny.subheader('Smooth Edge')
@@ -384,7 +385,7 @@ Image size is reduced if the number of pixels exceeds 2K (2,073,600).
     if web.pixel_canny_edge:
         web.now.write("### Pixel Edge in progress")
         cimg = converter.anime_filter(cimg, web.px_th1, web.px_th2)
-    if web.px_log_filter:
+    if web.px_dog_filter:
         web.now.write("### Pixel Edge in progress")
         cimg = converter.new_anime_filter(cimg)
     web.now.write("### Now mosaic")
@@ -408,7 +409,7 @@ Image size is reduced if the number of pixels exceeds 2K (2,073,600).
     if web.smooth_canny_filter:
         web.now.write("### Edge filter in progress")
         cimg = converter.anime_filter(cimg, web.anime_th1, web.anime_th2)
-    if web.smooth_log_filter:
+    if web.smooth_dog_filter:
         web.now.write("### Edge filter in progress")
         cimg = converter.new_anime_filter(cimg)
     web.col2.image(cimg, use_column_width=True)
