@@ -217,17 +217,14 @@ class Web():
             layout="centered",
             initial_sidebar_state="expanded",
         )
-        fdir = self.file_dir()
         st.title("PixelArt-Converter")
         self.message = st.empty()
-        self.use_ai = False
         self.upload = st.file_uploader(
             "Upload Image", type=['jpg', 'jpeg', 'png', 'webp', 'jfif'])
         self.color = st.selectbox(
-            "Select color Palette", fdir, disabled=self.use_ai)
+            "Select color Palette", ('AI', 'cold', 'gold', 'pale', 'pastel', 'pyxel', 'rainbow', 'warm'))
         self.slider = st.slider('Select ratio', 0.01, 1.0, 0.3, 0.01)
         self.custom = st.checkbox('Custom Palette')
-        self.use_ai = st.checkbox('Use AI', True)
         self.share()
 
         self.col1, self.col2 = st.columns(2)
@@ -311,10 +308,10 @@ class Web():
         st.title("Anime Filter")
         st.write('Simultaneous application of the Canny and DoG filters is deprecated.')
 
-        st.subheader("Dog Filter")
+        st.subheader("DoG Filter")
         px_col_dog, smooth_col_dog = st.columns(2)
-        self.smooth_dog_filter = px_col_dog.checkbox('Smooth Dog Filter')
-        self.px_dog_filter = smooth_col_dog.checkbox('Pixel Dog Filter', True)
+        self.smooth_dog_filter = px_col_dog.checkbox('Smooth DoG Filter')
+        self.px_dog_filter = smooth_col_dog.checkbox('Pixel DoG Filter', True)
 
         st.subheader("Canny Filter")
         smooth_col_canny, px_col_canny,  = st.columns(2)
@@ -391,8 +388,8 @@ Image size is reduced if the number of pixels exceeds 2K (2,073,600).
     web.now.write("### Now mosaic")
     cimg = converter.mosaic(cimg, web.slider)
     if web.no_convert == False:
-        if web.custom or web.use_ai:
-            if web.use_ai:
+        if web.custom or web.color == 'AI':
+            if web.color == 'AI':
                 web.now.write("### AI Palette in progress")
                 ai_color = getMainColor(
                     cimg, web.color_number, web.ai_iter)
