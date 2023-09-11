@@ -3,6 +3,7 @@ import streamlit.components.v1 as components
 import numpy as np
 import cv2
 from PIL import Image
+from PIL import ImageEnhance
 import csv
 import os
 import pandas as pd
@@ -41,8 +42,8 @@ class Converter():
     def mosaic(self, img, ratio=0.1):
         small = cv2.resize(img, None, fx=ratio, fy=ratio,
                            interpolation=cv2.INTER_NEAREST)
-        return cv2.resize(small, img.shape[:2][::-1], interpolation=cv2.INTER_NEAREST)
-        # return small
+        # return cv2.resize(small, img.shape[:2][::-1], interpolation=cv2.INTER_NEAREST)
+        return small
 
     def convert(self, img, option, custom=None):
         w, h = img.shape[:2]
@@ -158,6 +159,27 @@ class Converter():
             cx = cx+int(w/2)
         return completed
 
+    def saturation(self, img, val=1):
+        img = Image.fromarray(img)
+        enhancer = ImageEnhance.Color(img)
+        result = enhancer.enhance(val)
+        result = np.array(result)
+        return result
+
+    def brightness(self, img, val=1):
+        img = Image.fromarray(img)
+        enhancer = ImageEnhance.Brightness(img)
+        result = enhancer.enhance(val)
+        result = np.array(result)
+        return result
+
+    def sharpness(self, img, val=1):
+        img = Image.fromarray(img)
+        enhancer = ImageEnhance.Sharpness(img)
+        result = enhancer.enhance(val)
+        result = np.array(result)
+        return result
+
     def combine_img(self, img1, img2):
         # 画像の高さと幅を取得
         height, width, _ = img1.shape
@@ -182,16 +204,20 @@ class Converter():
         converted = img.copy()
         old_rgb = [converted[0][0][0], converted[0][0][1], converted[0][0][2]]
         for height in range(h):
-            old_rgb = [converted[0][height][0], converted[0][height][1], converted[0][height][2]]
+            old_rgb = [converted[0][height][0], converted[0]
+                       [height][1], converted[0][height][2]]
             for width in range(w):
-                rgb = [converted[width][height][0], converted[width][height][1], converted[width][height][2]]
+                rgb = [converted[width][height][0], converted[width]
+                       [height][1], converted[width][height][2]]
                 if old_rgb != rgb:
                     converted[width][height][0], converted[width][height][1], converted[width][height][2] = 0, 0, 0
                 old_rgb = rgb
         for width in range(w):
-            old_rgb = [converted[width][0][0], converted[width][0][1], converted[width][0][2]]
+            old_rgb = [converted[width][0][0], converted[width]
+                       [0][1], converted[width][0][2]]
             for height in range(h):
-                rgb = [converted[width][height][0], converted[width][height][1], converted[width][height][2]]
+                rgb = [converted[width][height][0], converted[width]
+                       [height][1], converted[width][height][2]]
                 if old_rgb != rgb:
                     converted[width][height][0], converted[width][height][1], converted[width][height][2] = 0, 0, 0
                 old_rgb = rgb
@@ -223,7 +249,7 @@ class Web():
             "Upload Image", type=['jpg', 'jpeg', 'png', 'webp', 'jfif'])
         self.color = st.selectbox(
             "Select color Palette", ('AI', 'cold', 'gold', 'pale', 'pastel', 'pyxel', 'rainbow', 'warm'))
-        self.slider = st.slider('Select ratio', 0.01, 1.0, 0.3, 0.01)
+        self.slider = st.slider('Select Mosaic Ratio', 0.01, 1.0, 0.3, 0.01)
         self.custom = st.checkbox('Custom Palette')
         self.share()
 
@@ -244,7 +270,7 @@ class Web():
     def share(self):
         components.html(
             """
-<a href="https://twitter.com/share?ref_src=twsrc%5Etfw" class="twitter-share-button" data-show-count="false" data-text="PixelArt-Converter\nFascinating tool to convert images into pixel art!\n" data-url="https://pixelart.streamlit.app" data-hashtags="pixelart,streamlit">Tweet</a><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+<a href="https://twitter.com/share?ref_src=twsrc%5Etfw" class="twitter-share-button" data-show-count="false" data-text="PixelArt-Converter\nFascinating tool to convert images into pixel art!\n By @akazdayo" data-url="https://pixelart.streamlit.app" data-hashtags="pixelart,streamlit">Tweet</a><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
             """,
             height=30,
         )
@@ -306,7 +332,8 @@ class Web():
 
     def more_options(self):
         st.title("Anime Filter")
-        st.write('Simultaneous application of the Canny and DoG filters is deprecated.')
+        st.write(
+            'Simultaneous application of the Canny and DoG filters is deprecated.')
 
         st.subheader("DoG Filter")
         px_col_dog, smooth_col_dog = st.columns(2)
@@ -317,7 +344,8 @@ class Web():
         smooth_col_canny, px_col_canny,  = st.columns(2)
 
         smooth_col_canny.subheader('Smooth Edge')
-        self.smooth_canny_filter = smooth_col_canny.checkbox('Smooth Canny Filter')
+        self.smooth_canny_filter = smooth_col_canny.checkbox(
+            'Smooth Canny Filter')
         self.anime_th1 = smooth_col_canny.slider('Select threhsold1(minVal)', 0.0, 500.0, 0.0, 5.0,
                                                  help="The smaller the value, the more edges there are.(using cv2.Canny)", disabled=not self.smooth_canny_filter)
         self.anime_th2 = smooth_col_canny.slider('Select threhsold2(maxVal)', 0.0, 500.0, 0.0, 5.0,
@@ -333,6 +361,9 @@ class Web():
         st.title("Convert Setting")
         self.no_convert = st.checkbox('No Color Convert')
         self.decreaseColor = st.checkbox('decrease Color')
+        self.saturation = st.slider("Select Saturation", 0.0, 5.0, 1.0, 0.1)
+        self.brightness = st.slider("Select Brightness", 0.0, 2.0, 1.0, 0.1)
+        self.sharpness = st.slider("Select Sharpness", 0.0, 2.0, 1.0, 0.1)
 
     def get_image(self, upload):
         img = Image.open(upload)
@@ -367,7 +398,7 @@ if __name__ == "__main__":
     else:
         img = web.get_image("sample/irasutoya.png")
     height, width = img.shape[:2]
-    if height*width < 2073600:
+    if height*width < 2100000:
         pass
     else:
         img = converter.resize_image(img)
@@ -379,6 +410,15 @@ Image size is reduced if the number of pixels exceeds 2K (2,073,600).
     # del img
     del web.upload
     web.col1.image(cimg)
+    if web.saturation != 1:
+        cimg = converter.saturation(
+            cimg, web.saturation)
+    if web.brightness != 1:
+        cimg = converter.brightness(
+            cimg, web.brightness)
+    if web.sharpness != 1:
+        cimg = converter.sharpness(
+            cimg, web.sharpness)
     if web.pixel_canny_edge:
         web.now.write("### Pixel Edge in progress")
         cimg = converter.anime_filter(cimg, web.px_th1, web.px_th2)
@@ -386,20 +426,24 @@ Image size is reduced if the number of pixels exceeds 2K (2,073,600).
         web.now.write("### Pixel Edge in progress")
         cimg = converter.new_anime_filter(cimg)
     web.now.write("### Now mosaic")
-    cimg = converter.mosaic(cimg, web.slider)
+    if web.slider != 1:
+        cimg = converter.mosaic(cimg, web.slider)
     if web.no_convert == False:
         if web.custom or web.color == 'AI':
             if web.color == 'AI':
                 web.now.write("### AI Palette in progress")
                 ai_color = getMainColor(
                     cimg, web.color_number, web.ai_iter)
-                web.custom_palette(pd.DataFrame(
-                    {"hex": c} for c in ai_color))
+                with st.expander("AI Palette"):
+                    web.custom_palette(pd.DataFrame(
+                        {"hex": c} for c in ai_color))
             web.now.write("### Color Convert in progress")
             cimg = converter.convert(cimg, "Custom", web.rgblist)
         else:
             web.now.write("### Color Convert in progress")
             cimg = converter.convert(cimg, web.color)
+    cimg = cv2.resize(cimg, img.shape[:2][::-1],
+                      interpolation=cv2.INTER_NEAREST)
     if web.decreaseColor:
         web.now.write("### Decrease Color in progress")
         cimg = converter.decreaseColor(cimg)
