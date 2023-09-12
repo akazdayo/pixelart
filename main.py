@@ -103,7 +103,7 @@ class Converter():
         e[e >= 1] = 1
         return e * 255
 
-    def new_anime_filter(self, img):
+    def new_anime_filter(self, img, scratch=False):
         # アルファチャンネルを分離
         bg_image = img[:, :, :3]
         if len(img[0][0]) == 4:
@@ -115,7 +115,8 @@ class Converter():
         _, image = cv2.threshold(image, 200, 255, cv2.THRESH_BINARY)
         a = np.array(image, np.uint8)
         image = cv2.cvtColor(a, cv2.COLOR_RGB2BGR)
-        image = cv2.bitwise_not(image)
+        if scratch == False:
+            image = cv2.bitwise_not(image)
         result = cv2.subtract(bg_image, image)
         # アルファチャンネルを結合して返す
         if len(img[0][0]) == 4:
@@ -359,6 +360,8 @@ class Web():
                                           help="The smaller the value, the more edges there are.(using cv2.Canny)", disabled=not self.pixel_canny_edge)
 
         st.title("Convert Setting")
+        self.no_expand = st.checkbox('No Expand Image')
+        self.scratch = st.checkbox('Scartch Filter')
         self.no_convert = st.checkbox('No Color Convert')
         self.decreaseColor = st.checkbox('decrease Color')
         self.saturation = st.slider("Select Saturation", 0.0, 5.0, 1.0, 0.1)
@@ -419,6 +422,8 @@ Image size is reduced if the number of pixels exceeds 2K (2,073,600).
     if web.sharpness != 1:
         cimg = converter.sharpness(
             cimg, web.sharpness)
+    if web.scratch:
+        cimg = converter.new_anime_filter(cimg, True)
     if web.pixel_canny_edge:
         web.now.write("### Pixel Edge in progress")
         cimg = converter.anime_filter(cimg, web.px_th1, web.px_th2)
@@ -442,8 +447,9 @@ Image size is reduced if the number of pixels exceeds 2K (2,073,600).
         else:
             web.now.write("### Color Convert in progress")
             cimg = converter.convert(cimg, web.color)
-    cimg = cv2.resize(cimg, img.shape[:2][::-1],
-                      interpolation=cv2.INTER_NEAREST)
+    if web.no_expand == False:
+        cimg = cv2.resize(cimg, img.shape[:2][::-1],
+                          interpolation=cv2.INTER_NEAREST)
     if web.decreaseColor:
         web.now.write("### Decrease Color in progress")
         cimg = converter.decreaseColor(cimg)
