@@ -374,7 +374,7 @@ class Web():
         return img_array
 
 
-@st.cache_resource
+@st.cache_resource(show_spinner=False)
 def getMainColor(img, color, iter):
     img = cv2.cvtColor(img, cv2.COLOR_RGBA2RGB)
     img = img.reshape(
