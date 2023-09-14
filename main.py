@@ -426,40 +426,51 @@ Image size is reduced if the number of pixels exceeds 2K (2,073,600).
         cimg = converter.new_anime_filter(cimg, True)
     if web.pixel_canny_edge:
         web.now.write("### Pixel Edge in progress")
+        # st.sidebar.write("### Pixel Edge in progress")
         cimg = converter.anime_filter(cimg, web.px_th1, web.px_th2)
     if web.px_dog_filter:
         web.now.write("### Pixel Edge in progress")
+        # st.sidebar.write("### Pixel Edge in progress")
         cimg = converter.new_anime_filter(cimg)
     web.now.write("### Now mosaic")
+    # st.sidebar.write("### Now mosaic")
     if web.slider != 1:
         cimg = converter.mosaic(cimg, web.slider)
     if web.no_convert == False:
         if web.custom or web.color == 'AI':
             if web.color == 'AI':
                 web.now.write("### AI Palette in progress")
+                # st.sidebar.write("### AI Palette in progress")
                 ai_color = getMainColor(
                     cimg, web.color_number, web.ai_iter)
                 with st.expander("AI Palette"):
                     web.custom_palette(pd.DataFrame(
                         {"hex": c} for c in ai_color))
             web.now.write("### Color Convert in progress")
+            # st.sidebar.write("### Color Convert in progress")
             cimg = converter.convert(cimg, "Custom", web.rgblist)
         else:
             web.now.write("### Color Convert in progress")
+            # st.sidebar.write("### Color Convert in progress")
             cimg = converter.convert(cimg, web.color)
     if web.no_expand == False:
         cimg = cv2.resize(cimg, img.shape[:2][::-1],
                           interpolation=cv2.INTER_NEAREST)
     if web.decreaseColor:
         web.now.write("### Decrease Color in progress")
+        # st.sidebar.write("### Decrease Color in progress")
         cimg = converter.decreaseColor(cimg)
     if web.smooth_canny_filter:
         web.now.write("### Edge filter in progress")
+        # st.sidebar.write("### Edge filter in progress")
         cimg = converter.anime_filter(cimg, web.anime_th1, web.anime_th2)
     if web.smooth_dog_filter:
         web.now.write("### Edge filter in progress")
+        # st.sidebar.write("### Edge filter in progress")
         cimg = converter.new_anime_filter(cimg)
     web.col2.image(cimg, use_column_width=True)
+    st.sidebar.image(cimg, use_column_width=True)
+    # st.sidebar.write("")
     web.now.write("")
     del converter.color_dict
     gc.collect()
