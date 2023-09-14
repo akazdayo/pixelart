@@ -9,6 +9,7 @@ opencv-python-headless = "*"
 numpy = "*"
 pillow = "*"
 scikit-learn = "*"
+watchdog = "*"
 
 [dev-packages]
 opencv-python = "*"
