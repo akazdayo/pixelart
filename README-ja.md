@@ -1,23 +1,25 @@
 # PixelArt-Converter
 Language : [English](README.md)  
 # 基本機能
-## colorpallet
+## color palette
 このサイトでは、色を変換しています。  
 色を変換するときに使用するカラーパレットを選択します。  
-Pyxelは[Pyxel](https://github.com/kitao/pyxel)というライブラリで使用されている色です。  
-![Color pallet](./image/pallet.png)
-
-## ratio
+Pyxelは[Pyxel](https://github.com/kitao/pyxel)というゲームライブラリで使用されている色です。  
+![Color palette](./image/palette.png)
+### AI Palette
+KMeansを使用して入力された画像専用のパレットを作成します。
+![AI](./image/ai.jpg)
+## Mosaic ratio
 0.01ずつ調整できるスライダーで、数字が少なくなるほどドットが大きくなります。
 ![Select ratio](./image/ratio.png)
 
-## Custom Pallet
-ColorPalletを自分で作成できます。  
+## Custom palette
+Colorpaletteを自分で作成できます。  
 表の中にパレットに追加したい色をカラーコードで入力します。  
 表に入力した色は右側に表示されます。  
 表の上にあるカラーピッカーから色を選択してカラーコードをコピーし、入力すると楽です。  
 ※スポイトには対応していません
-![Custom pallet](./image/custom.png)
+![Custom palette](./image/custom.png)
 
 ## Tweet
 ツイッターにツイートするボタンです。  
@@ -29,8 +31,15 @@ ColorPalletを自分で作成できます。
 ## Anime Filter
 エッジを追加します。  
 アニメっぽくなるかもしれないです。
-![animefilter_on](./image/anime.png)
-![animefilter_off](./image/anime2.jpg)
+![animefilter_on](./image/ai.jpg)
+![animefilter_off](./image/noanime.jpg)
+### threhsold
+AnimeFilter(エッジ処理)の値です。  
+値が小さいほどエッジが多くなります。  
+#### threhsold 1
+エッジの量を指定します。
+#### threhsold 2
+エッジの長さを指定します。
 
 ## No Color Convert
 カラーパレットを使用しないようにします。  
@@ -38,21 +47,15 @@ ColorPalletを自分で作成できます。
 
 ## decrease Color
 減色処理をします。  
-基本的には、``No Color Convert``と一緒に使用します。
+基本的には、``No Color Convert``と同時に使用します。
 ![decrease_color](./image/decrease.jpg)
-
-## threhsold
-AnimeFilter(エッジ処理)の値です。  
-値が小さいほどエッジが多くなります。  
-### threhsold 1
-エッジの量を指定します。
-### threhsold 2
-エッジの長さを指定します。
 
 # Experimental Features
 まだ正式な機能ではないので、バグや、エラーが発生する可能性があります。  
-## Pixel Edge
-エッジをドットで生成します。
+## AI
+### AI Color
+AIカラーパレットを使用しているときに使う色の数を変更します。
+
 
 # Color Sample
 デフォルトのカラーパレットに含まれている色を表示します  

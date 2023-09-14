@@ -248,13 +248,14 @@ class Web():
         self.message = st.empty()
         self.upload = st.file_uploader(
             "Upload Image", type=['jpg', 'jpeg', 'png', 'webp', 'jfif'])
+        self.col1, self.col2 = st.columns(2)
         self.color = st.selectbox(
-            "Select color Palette", ('AI', 'cold', 'gold', 'pale', 'pastel', 'pyxel', 'rainbow', 'warm'))
+            "Select color Palette", ('AI', 'cold', 'gold', 'pale', 'pastel', 'pyxel', 'rainbow', 'warm', 'Custom Palette'))
         self.slider = st.slider('Select Mosaic Ratio', 0.01, 1.0, 0.3, 0.01)
-        self.custom = st.checkbox('Custom Palette')
+        # self.custom = st.checkbox('Custom Palette')
+
         self.share()
 
-        self.col1, self.col2 = st.columns(2)
         self.col1.header("Original img")
         self.col2.header("Convert img")
         self.now = st.empty()
@@ -416,7 +417,7 @@ if __name__ == "__main__":
         img = converter.resize_image(img)
         web.message.warning("""
 The size of the image has been reduced because the file size is too large.\n
-Image size is reduced if the number of pixels exceeds 2K (2,073,600).
+Image size is reduced if the number of pixels exceeds FullHD (2,073,600).
         """)
     cimg = img.copy()
     # del img
@@ -446,8 +447,8 @@ Image size is reduced if the number of pixels exceeds 2K (2,073,600).
     if web.slider != 1:
         cimg = converter.mosaic(cimg, web.slider)
     if web.no_convert == False:
-        if web.custom or web.color == 'AI':
-            if web.color == 'AI':
+        if web.color == "Custom Palette" or web.color == 'AI':
+            if web.color == 'AI' and web.color != "Custom Palette":
                 web.now.write("### AI Palette in progress")
                 # st.sidebar.write("### AI Palette in progress")
                 ai_color = getMainColor(
