@@ -374,11 +374,20 @@ class Web():
         return img_array
 
 
+def get_color_count(img):
+    _, unique_counts = np.unique(img.reshape(-1, 3), axis=0, return_counts=True)
+    num_unique_colors_simplified = len(unique_counts)
+    return num_unique_colors_simplified
+
+
 @st.cache_resource(show_spinner=False)
 def getMainColor(img, color, iter):
     img = cv2.cvtColor(img, cv2.COLOR_RGBA2RGB)
     img = img.reshape(
         (img.shape[0] * img.shape[1], 3))
+    color_count = get_color_count(img)
+    if color_count < color:
+        color = color_count
     cluster = KMeans(n_clusters=color, max_iter=iter)
     cluster.fit(X=img)
     cluster_centers_arr = cluster.cluster_centers_.astype(
