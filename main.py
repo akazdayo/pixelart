@@ -31,6 +31,8 @@ class Converter():
         min_distance = float('inf')
         color_name = None
         for color in color_palette:
+            # ユークリッド距離
+            # 差分を取って2乗すると距離になる。
             distance = (int(r) - color[0]) ** 2 + (int(g) -
                                                    color[1]) ** 2 + (int(b) - color[2]) ** 2
             if distance < min_distance:
@@ -93,7 +95,16 @@ class Converter():
         else:
             return result
 
-    def pxdog(self, img, size, p, sigma, eps, phi, k=1.6):
+# p=しきい値処理のためのパラメータ sigma=ガウス分布の分散(正規分布) eps=イプシロン(pと一緒) phi=ファイ(pと一緒) k=分散の倍率
+    def pxdog(self, img, size, p, sigma, eps, phi, k=1.6):  # ある程度わかってて、他人のコード使って実装しました。
+        # LoG ぼかしてから輪郭をつけることができる
+        # ラプラシアンフィルタ　=> ノイズに強い輪郭線を作る
+
+        # DoG LoGフィルターの近似です。
+        # GaussianBlur(ガウシアンフィルタ) => ぼかす
+        # ガウシアンフィルター －(引く) ガウシアンフィルター
+        # 拡張DoG
+        # しきい値処理を工夫しているのが拡張DoG
         eps /= 255
         g1 = cv2.GaussianBlur(img, (size, size), sigma)
         g2 = cv2.GaussianBlur(img, (size, size), sigma*k)
@@ -112,10 +123,11 @@ class Converter():
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         image = np.array(image, dtype=np.float64)
         image = self.pxdog(image, 17, 40, 1.4, 0, 15)
-        _, image = cv2.threshold(image, 200, 255, cv2.THRESH_BINARY)
+        # 第一: 画像 第ニ: しきい値 第三: しきい値に当てはまったときになる値
+        _, image = cv2.threshold(image, 200, 255, cv2.THRESH_BINARY_INV)  # しきい値 二値化
         a = np.array(image, np.uint8)
         image = cv2.cvtColor(a, cv2.COLOR_RGB2BGR)
-        if scratch == False:
+        if scratch == True:
             image = cv2.bitwise_not(image)
         result = cv2.subtract(bg_image, image)
         # アルファチャンネルを結合して返す
@@ -141,6 +153,9 @@ class Converter():
     def resize_image(self, img):
         img_size = img.shape[0] * img.shape[1]
         if img_size > 2073600:
+            # 画像をFull HDよりも小さくする
+            # 面積から辺の比に直す。
+            # 面積比 相似比 検索
             ratio = (img_size / 2073600) ** 0.5
             new_height = int(img.shape[0] / ratio)
             new_width = int(img.shape[1] / ratio)
@@ -381,9 +396,24 @@ def get_color_count(img):
     return num_unique_colors_simplified
 
 
+def lab_to_rgb(lab):
+
+    # LAB色空間が入った配列
+    lab_array = np.array(lab, dtype=np.uint8)
+
+    # 配列の形状を変更（OpenCVの色空間変換関数が3次元配列を必要とするため）
+    lab_array = lab_array.reshape(-1, 1, 3)
+
+    # LABからRGBへの変換
+    rgb_array = cv2.cvtColor(lab_array, cv2.COLOR_Lab2RGB)  # numpy配列
+    rgb_array = rgb_array.reshape(len(rgb_array), 3)
+    return rgb_array
+
+
 @st.cache_resource(show_spinner=False)
 def getMainColor(img, color, iter):
     img = cv2.cvtColor(img, cv2.COLOR_RGBA2RGB)
+    img = cv2.cvtColor(img, cv2.COLOR_RGB2Lab)
     img = img.reshape(
         (img.shape[0] * img.shape[1], 3))
     color_count = get_color_count(img)
@@ -394,8 +424,7 @@ def getMainColor(img, color, iter):
     cluster_centers_arr = cluster.cluster_centers_.astype(
         int, copy=False)
     hexlist = []
-
-    for rgb_arr in cluster_centers_arr:
+    for rgb_arr in list(lab_to_rgb(cluster_centers_arr)):
         hexlist.append('#%02x%02x%02x' % tuple(rgb_arr))
     del img
     del cluster
