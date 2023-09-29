@@ -410,7 +410,7 @@ def lab_to_rgb(lab):
     return rgb_array
 
 
-@st.cache_resource(show_spinner=False)
+@st.cache_resource(show_spinner=False,max_entries=6)
 def getMainColor(img, color, iter):
     img = cv2.cvtColor(img, cv2.COLOR_RGBA2RGB)
     img = cv2.cvtColor(img, cv2.COLOR_RGB2Lab)
@@ -449,7 +449,6 @@ The size of the image has been reduced because the file size is too large.\n
 Image size is reduced if the number of pixels exceeds FullHD (2,073,600).
         """)
     cimg = img.copy()
-    # del img
     del web.upload
     web.col1.image(cimg)
     if web.saturation != 1:
@@ -465,51 +464,42 @@ Image size is reduced if the number of pixels exceeds FullHD (2,073,600).
         cimg = converter.new_anime_filter(cimg, True)
     if web.pixel_canny_edge:
         web.now.write("### Pixel Edge in progress")
-        # st.sidebar.write("### Pixel Edge in progress")
         cimg = converter.anime_filter(cimg, web.px_th1, web.px_th2)
     if web.px_dog_filter:
         web.now.write("### Pixel Edge in progress")
-        # st.sidebar.write("### Pixel Edge in progress")
         cimg = converter.new_anime_filter(cimg)
     web.now.write("### Now mosaic")
-    # st.sidebar.write("### Now mosaic")
     if web.slider != 1:
         cimg = converter.mosaic(cimg, web.slider)
     if web.no_convert == False:
         if web.color == "Custom Palette" or web.color == 'AI':
             if web.color == 'AI' and web.color != "Custom Palette":
                 web.now.write("### AI Palette in progress")
-                # st.sidebar.write("### AI Palette in progress")
                 ai_color = getMainColor(
                     cimg, web.color_number, web.ai_iter)
                 with st.expander("AI Palette"):
                     web.custom_palette(pd.DataFrame(
                         {"hex": c} for c in ai_color))
             web.now.write("### Color Convert in progress")
-            # st.sidebar.write("### Color Convert in progress")
             cimg = converter.convert(cimg, "Custom", web.rgblist)
         else:
             web.now.write("### Color Convert in progress")
-            # st.sidebar.write("### Color Convert in progress")
             cimg = converter.convert(cimg, web.color)
     if web.no_expand == False:
         cimg = cv2.resize(cimg, img.shape[:2][::-1],
                           interpolation=cv2.INTER_NEAREST)
     if web.decreaseColor:
         web.now.write("### Decrease Color in progress")
-        # st.sidebar.write("### Decrease Color in progress")
         cimg = converter.decreaseColor(cimg)
     if web.smooth_canny_filter:
         web.now.write("### Edge filter in progress")
-        # st.sidebar.write("### Edge filter in progress")
         cimg = converter.anime_filter(cimg, web.anime_th1, web.anime_th2)
     if web.smooth_dog_filter:
         web.now.write("### Edge filter in progress")
-        # st.sidebar.write("### Edge filter in progress")
         cimg = converter.new_anime_filter(cimg)
     web.col2.image(cimg, use_column_width=True)
     st.sidebar.image(cimg, use_column_width=True)
-    # st.sidebar.write("")
     web.now.write("")
     del converter.color_dict
     gc.collect()
+    
