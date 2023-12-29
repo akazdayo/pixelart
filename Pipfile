@@ -10,6 +10,7 @@ numpy = "*"
 pillow = "*"
 scikit-learn = "*"
 watchdog = "*"
+colorama = "*"
 
 [dev-packages]
 opencv-python = "*"
