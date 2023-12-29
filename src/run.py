@@ -3,15 +3,15 @@ import cv2
 import pandas as pd
 import warnings
 import gc
-import ai
-import convert
-import filters
-import draw
+import src.ai as ai
+import src.convert as convert
+import src.filters as filters
+import src.draw as draw
 
 warnings.simplefilter('ignore')
 
 
-if __name__ == "__main__":
+def main():
     web = draw.Web()
     ai_palette = ai.AI()
     conv = convert.Convert()
