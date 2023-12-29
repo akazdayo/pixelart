@@ -7,7 +7,8 @@ Language : [English](README.md)
 Pyxelは[Pyxel](https://github.com/kitao/pyxel)というゲームライブラリで使用されている色です。  
 ![Color palette](./image/palette.png)
 ### AI Palette
-KMeansを使用して入力された画像専用のパレットを作成します。
+KMeansを使用して入力された画像専用のパレットを作成します。  
+https://pixabay.com/vectors/homes-the-needle-village-mountains-8194751/
 ![AI](./image/ai.jpg)
 ## Mosaic ratio
 0.01ずつ調整できるスライダーで、数字が少なくなるほどドットが大きくなります。

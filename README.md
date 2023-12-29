@@ -10,7 +10,8 @@ Select the color palette to use when converting colors.
 Pyxel is the color used in the library called [Pyxel](https://github.com/kitao/pyxel).  
 ![Color palette](./image/palette.png)
 ### AI Palette
-Create a palette dedicated to images entered using KMeans.
+Create a palette dedicated to images entered using KMeans.  
+https://pixabay.com/vectors/homes-the-needle-village-mountains-8194751/
 ![AI](./image/ai.jpg)
 
 ## Mosaic ratio
