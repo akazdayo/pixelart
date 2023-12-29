@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
-from PIL import Image, ImageEnhance
+from PIL import Image
+from PIL import ImageEnhance
 
 
 class EdgeFilter:
@@ -68,7 +69,7 @@ class EdgeFilter:
             return result
 
 
-class ImageEnhance:
+class ImageEnhancer:
     def __init__(self) -> None:
         pass
 

@@ -16,7 +16,7 @@ def main():
     ai_palette = ai.AI()
     conv = convert.Convert()
     edges = filters.EdgeFilter()
-    enhance = filters.ImageEnhance()
+    enhance = filters.ImageEnhancer()
 
     if web.upload != None:
         img = web.get_image(web.upload)
