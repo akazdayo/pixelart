@@ -30,15 +30,15 @@ def pallet_write(col, index):
 
 fdir = file_dir()
 color = st.selectbox("Select color pallet", fdir)
-pallet = read_csv("./color/"+color+".csv")
+pallet = read_csv("./color/" + color + ".csv")
 
-for i in range(len(pallet)//4+min(1, len(pallet) % 4)):
+for i in range(len(pallet) // 4 + min(1, len(pallet) % 4)):
     col1, col2, col3, col4 = st.columns(4)
-    if i*4+0 < len(pallet):
-        pallet_write(col1, i*4+0)
-    if i*4+1 < len(pallet):
-        pallet_write(col2, i*4+1)
-    if i*4+2 < len(pallet):
-        pallet_write(col3, i*4+2)
-    if i*4+3 < len(pallet):
-        pallet_write(col4, i*4+3)
+    if i * 4 + 0 < len(pallet):
+        pallet_write(col1, i * 4 + 0)
+    if i * 4 + 1 < len(pallet):
+        pallet_write(col2, i * 4 + 1)
+    if i * 4 + 2 < len(pallet):
+        pallet_write(col3, i * 4 + 2)
+    if i * 4 + 3 < len(pallet):
+        pallet_write(col4, i * 4 + 3)

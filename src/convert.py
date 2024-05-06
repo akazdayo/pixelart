@@ -17,13 +17,16 @@ class Convert:
             if (r, g, b) in self.color_dict:
                 return self.color_dict[(r, g, b)]
             # 最も近い色を見つける
-            min_distance = float('inf')
+            min_distance = float("inf")
             color_name = None
             for color in color_palette:
                 # ユークリッド距離
                 # 差分を取って2乗すると距離になる。
-                distance = (int(r) - color[0]) ** 2 + (int(g) -
-                                                       color[1]) ** 2 + (int(b) - color[2]) ** 2
+                distance = (
+                    (int(r) - color[0]) ** 2
+                    + (int(g) - color[1]) ** 2
+                    + (int(b) - color[2]) ** 2
+                )
                 if distance < min_distance:
                     min_distance = distance
                     color_name = color
@@ -35,16 +38,20 @@ class Convert:
         # 選択されたcsvファイルを読み込む
         color_palette = []
         if option != "Custom":
-            color_palette = self.read_csv("./color/"+option+".csv")
+            color_palette = self.read_csv("./color/" + option + ".csv")
         else:
-            if custom == [] or custom == None:
+            if custom == [] or custom is None:
                 return
             color_palette = custom
 
         for height in range(h):
             for width in range(w):
                 color = color_change(
-                    img[width][height][0], img[width][height][1], img[width][height][2], color_palette)
+                    img[width][height][0],
+                    img[width][height][1],
+                    img[width][height][2],
+                    color_palette,
+                )
                 changed[width][height][0] = color[0]  # 赤
                 changed[width][height][1] = color[1]  # 緑
                 changed[width][height][2] = color[2]  # 青

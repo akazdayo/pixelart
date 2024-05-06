@@ -39,10 +39,10 @@ class EdgeFilter:
         def filter(img_array, size, p, sigma, eps, phi, k=1.6):
             eps /= 255
             g1 = cv2.GaussianBlur(img_array, (size, size), sigma)
-            g2 = cv2.GaussianBlur(img_array, (size, size), sigma*k)
+            g2 = cv2.GaussianBlur(img_array, (size, size), sigma * k)
             d = (1 + p) * g1 - p * g2
             d /= d.max()
-            e = 1 + np.tanh(phi*(d-eps))
+            e = 1 + np.tanh(phi * (d - eps))
             e[e >= 1] = 1
             return e * 255
 
@@ -56,10 +56,11 @@ class EdgeFilter:
         image = filter(image, 17, 40, 1.4, 0, 15)
         # 第一: 画像 第ニ: しきい値 第三: しきい値に当てはまったときになる値
         _, image = cv2.threshold(
-            image, 200, 255, cv2.THRESH_BINARY_INV)  # しきい値 二値化
+            image, 200, 255, cv2.THRESH_BINARY_INV
+        )  # しきい値 二値化
         a = np.array(image, np.uint8)
         image = cv2.cvtColor(a, cv2.COLOR_RGB2BGR)
-        if scratch == True:
+        if scratch:
             image = cv2.bitwise_not(image)
         result = cv2.subtract(bg_image, image)
         # アルファチャンネルを結合して返す
@@ -95,8 +96,9 @@ class ImageEnhancer:
         return result
 
     def mosaic(self, image, ratio):
-        small = cv2.resize(image, None, fx=ratio, fy=ratio,
-                           interpolation=cv2.INTER_NEAREST)
+        small = cv2.resize(
+            image, None, fx=ratio, fy=ratio, interpolation=cv2.INTER_NEAREST
+        )
         return small
 
     def decrease(self, image):

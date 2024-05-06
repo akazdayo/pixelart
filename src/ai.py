@@ -10,26 +10,23 @@ class AI:
     def get_color(self, image, color, iter):
         img = cv2.cvtColor(image, cv2.COLOR_RGBA2RGB)
         img = cv2.cvtColor(img, cv2.COLOR_RGB2Lab)
-        img = img.reshape(
-            (img.shape[0] * img.shape[1], 3))
+        img = img.reshape((img.shape[0] * img.shape[1], 3))
         color_count = self.get_color_count(img)
         if color_count < color:
             color = color_count
         cluster = KMeans(n_clusters=color, max_iter=iter)
         cluster.fit(X=img)
-        cluster_centers_arr = cluster.cluster_centers_.astype(
-            int, copy=False)
+        cluster_centers_arr = cluster.cluster_centers_.astype(int, copy=False)
         hexlist = []
         for rgb_arr in list(self.lab2rgb(cluster_centers_arr)):
-            hexlist.append('#%02x%02x%02x' % tuple(rgb_arr))
+            hexlist.append("#%02x%02x%02x" % tuple(rgb_arr))
         del img
         del cluster
         del cluster_centers_arr
         return hexlist
 
     def get_color_count(self, image):
-        _, unique_counts = np.unique(
-            image.reshape(-1, 3), axis=0, return_counts=True)
+        _, unique_counts = np.unique(image.reshape(-1, 3), axis=0, return_counts=True)
         unique_colors = len(unique_counts)
         return unique_colors
 
