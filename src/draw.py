@@ -31,6 +31,7 @@ class Web:
             "Upload Image", type=["jpg", "jpeg", "png", "webp", "jfif"]
         )
         self.col1, self.col2 = st.columns(2)
+        st.write("""Link copy is not available.Please copy or download the image.""")
         self.color = st.selectbox(
             "Select color Palette",
             (

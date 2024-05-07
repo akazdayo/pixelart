@@ -34,11 +34,11 @@
         },
         "blinker": {
             "hashes": [
-                "sha256:5f1cdeff423b77c31b89de0565cd03e5275a03028f44b2b15f912632a58cced6",
-                "sha256:da44ec748222dcd0105ef975eed946da197d5bdf8bafb6aa92f5bc89da63fa25"
+                "sha256:1779309f71bf239144b9399d06ae925637cf6634cf6bd131104184531bf67c01",
+                "sha256:8f77b09d3bf7c795e969e9486f39c2c5e9c39d4ee07424be2bc594ece9642d83"
             ],
             "markers": "python_version >= '3.8'",
-            "version": "==1.8.1"
+            "version": "==1.8.2"
         },
         "cachetools": {
             "hashes": [
