@@ -11,6 +11,7 @@ pillow = "*"
 scikit-learn = "*"
 watchdog = "*"
 colorama = "*"
+numba = "*"
 
 [dev-packages]
 opencv-python = "*"
