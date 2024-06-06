@@ -1,10 +1,12 @@
 import csv
 import cv2
+from ctypes import cdll
 
 
 class Convert:
     def __init__(self) -> None:
         self.color_dict = {}
+        self.color_change = cdll.LoadLibrary("./libs/libpixelart.so")
 
     def read_csv(self, path):
         with open(path) as f:
@@ -13,26 +15,6 @@ class Convert:
             return color
 
     def convert(self, img, option, custom=None):
-        def color_change(r, g, b, color_palette):
-            if (r, g, b) in self.color_dict:
-                return self.color_dict[(r, g, b)]
-            # 最も近い色を見つける
-            min_distance = float("inf")
-            color_name = None
-            for color in color_palette:
-                # ユークリッド距離
-                # 差分を取って2乗すると距離になる。
-                distance = (
-                    (int(r) - color[0]) ** 2
-                    + (int(g) - color[1]) ** 2
-                    + (int(b) - color[2]) ** 2
-                )
-                if distance < min_distance:
-                    min_distance = distance
-                    color_name = color
-            self.color_dict[(r, g, b)] = color_name
-            return color_name
-
         w, h = img.shape[:2]
         changed = img.copy()
         # 選択されたcsvファイルを読み込む
@@ -46,7 +28,7 @@ class Convert:
 
         for height in range(h):
             for width in range(w):
-                color = color_change(
+                color = self.color_change(
                     img[width][height][0],
                     img[width][height][1],
                     img[width][height][2],
