@@ -22,7 +22,7 @@ def main():
     if web.upload is not None:
         img = web.get_image(web.upload)
     else:
-        img = web.get_image("sample/irasutoya.png")
+        img = web.get_image("sample/cat_and_dog.jpg")
 
     if img.ndim == 2:
         img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
