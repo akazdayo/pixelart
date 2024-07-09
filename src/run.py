@@ -96,6 +96,10 @@ Image size is reduced if the number of pixels exceeds FullHD (2,073,600).
         web.now.write("### Edge filter in progress")
         cimg = edges.dog(cimg)
 
+    if web.delete_alpha:
+        web.now.write("### Delete Alpha in progress")
+        cimg = conv.delete_alpha(cimg)
+
     web.col2.image(cimg, use_column_width=True)
     st.sidebar.image(cimg, use_column_width=True)
     web.now.write("")

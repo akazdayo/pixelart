@@ -68,3 +68,22 @@ class Convert:
             new_width = int(image.shape[1] / ratio)
             result = cv2.resize(image, (new_width, new_height))
         return result
+
+    def delete_alpha(self, image):
+        # 画像がアルファチャンネルを持っているか確認
+        if image.shape[2] == 4:
+            b = image[:, :, 0]
+            g = image[:, :, 1]
+            r = image[:, :, 2]
+            a = image[:, :, 3]
+            conv_a = a.copy()
+            for i, x in enumerate(a):
+                for j, y in enumerate(x):
+                    if y != 0:
+                        conv_a[i][j] = 255
+
+            merged = cv2.merge([b, g, r, conv_a])
+            return merged
+        else:
+            # アルファチャンネルがない場合はそのまま返す
+            return image

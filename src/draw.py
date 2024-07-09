@@ -133,6 +133,11 @@ class Web:
             1,
             help="Maximum number of iterations of the k-means algorithm for a single run.",
         )
+        self.delete_alpha = st.checkbox(
+            "Delete Alpha Channel",
+            False,
+            help="Remove the image transparency except perfect transparency",
+        )
 
     def more_options(self):
         st.title("Anime Filter")
@@ -196,7 +201,7 @@ class Web:
         self.scratch = st.checkbox("Scartch Filter")
         self.no_convert = st.checkbox("No Color Convert")
         self.decreaseColor = st.checkbox("decrease Color")
-        self.saturation = st.slider("Select Saturation", 0.0, 5.0, 1.0, 0.1)
+        self.saturation = st.slider("Select Saturation", 0.0, 5.0, 1.1, 0.1)
         self.brightness = st.slider("Select Brightness", 0.0, 2.0, 1.0, 0.1)
         self.sharpness = st.slider("Select Sharpness", 0.0, 2.0, 1.0, 0.1)
 
