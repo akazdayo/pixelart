@@ -51,40 +51,58 @@ class EdgeFilter:
         if len(img[0][0]) == 4:
             alpha = img[:, :, 3]
         image = base_image.copy()
+
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
         image = np.array(image, dtype=np.float64)
         image = filter(image, 17, 40, 1.4, 0, 15)
+
         # 第一: 画像 第ニ: しきい値 第三: しきい値に当てはまったときになる値
         _, image = cv2.threshold(
             image, 200, 255, cv2.THRESH_BINARY_INV
         )  # しきい値 二値化
         a = np.array(image, np.uint8)
-        image = cv2.cvtColor(a, cv2.COLOR_RGB2BGR)
+        # a = self.morphology_dilate(a)
+        image = cv2.cvtColor(a, cv2.COLOR_GRAY2BGR)
+
         if scratch:
             image = cv2.bitwise_not(image)
         result = cv2.subtract(base_image, image)
+
         # アルファチャンネルを結合して返す
         if len(img[0][0]) == 4:
             return np.dstack([result, alpha])
         else:
             return result
 
-    def morphology_gradient(self, base_image, op):
-        gray_image = cv2.cvtColor(base_image, cv2.COLOR_BGR2GRAY)
-
-        kernel = np.ones((2, 2), np.uint8)
-        morphology_img = cv2.morphologyEx(
-            gray_image, op, kernel)
+    def morphology_dilate(self, image):
+        dilate_kernel = np.ones((3, 3), np.uint8)
+        dilate_filtered = cv2.morphologyEx(image, cv2.MORPH_DILATE, dilate_kernel)
 
         _, binary_image = cv2.threshold(
-            morphology_img, 200, 255, cv2.THRESH_BINARY_INV)  # しきい値 二値化
+            dilate_filtered, 200, 255, cv2.THRESH_BINARY_INV
+        )  # 二値化
         binary_image = np.array(binary_image, np.uint8)
+        binary_image = cv2.bitwise_not(binary_image)
 
-        binary_image_bgr = cv2.cvtColor(morphology_img, cv2.COLOR_GRAY2BGR)
-        result = cv2.subtract(base_image, binary_image_bgr)
+        return binary_image
 
-        cv2.imwrite("result.jpg", binary_image_bgr)
-        return result
+    def morphology_erode(self, image):
+        # kernel = np.ones((2, 2), np.uint8)
+        # img = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        kernel = np.array(
+            [
+                [0, 1, 0],
+                [1, 1, 1],
+                [0, 1, 0],
+            ],
+            dtype=np.uint8,
+        )
+
+        erode_filtered = np.array(
+            cv2.morphologyEx(image, cv2.MORPH_ERODE, kernel, iterations=3), np.uint8
+        )
+        return erode_filtered
 
 
 class ImageEnhancer:

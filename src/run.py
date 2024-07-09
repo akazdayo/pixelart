@@ -7,6 +7,7 @@ import src.ai as ai
 import src.convert as convert
 import src.filters as filters
 import src.draw as draw
+import numpy as np
 
 warnings.simplefilter("ignore")
 
@@ -61,8 +62,7 @@ Image size is reduced if the number of pixels exceeds FullHD (2,073,600).
         cimg = edges.dog(cimg)
 
     if web.morphology:
-        cimg = edges.morphology_gradient(cimg, cv2.MORPH_GRADIENT)
-        cimg = edges.morphology_gradient(cimg, cv2.MORPH_OPEN)
+        cimg = edges.morphology_erode(cimg)
 
     web.now.write("### Now mosaic")
 
@@ -73,12 +73,10 @@ Image size is reduced if the number of pixels exceeds FullHD (2,073,600).
         if web.color == "Custom Palette" or web.color == "AI":
             if web.color == "AI" and web.color != "Custom Palette":
                 web.now.write("### AI Palette in progress")
-                ai_color = ai_palette.get_color(
-                    cimg, web.color_number, web.ai_iter)
+                ai_color = ai_palette.get_color(cimg, web.color_number, web.ai_iter)
 
                 with st.expander("AI Palette"):
-                    web.custom_palette(pd.DataFrame(
-                        {"hex": c} for c in ai_color))
+                    web.custom_palette(pd.DataFrame({"hex": c} for c in ai_color))
 
             web.now.write("### Color Convert in progress")
             cimg = conv.convert(cimg, "Custom", web.rgblist)
@@ -88,8 +86,7 @@ Image size is reduced if the number of pixels exceeds FullHD (2,073,600).
             cimg = conv.convert(cimg, web.color)
 
     if not web.no_expand:
-        cimg = cv2.resize(
-            cimg, img.shape[:2][::-1], interpolation=cv2.INTER_NEAREST)
+        cimg = cv2.resize(cimg, img.shape[:2][::-1], interpolation=cv2.INTER_NEAREST)
 
     if web.decreaseColor:
         web.now.write("### Decrease Color in progress")
