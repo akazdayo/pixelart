@@ -24,6 +24,8 @@ def main():
     else:
         img = web.get_image("sample/irasutoya.png")
 
+    if img.ndim == 2:
+        img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
     height, width = img.shape[:2]
     if height * width < 2100000:
         pass
