@@ -105,8 +105,7 @@ class Web:
         self.rgblist = list()
         for i in range(len(self.edited_df.loc[self.edited_df["hex"].keys()])):
             self.rgblist.append([])
-            self.rgblist[i].append(
-                (self.edited_df.loc[self.edited_df.index[i]]["hex"]))
+            self.rgblist[i].append((self.edited_df.loc[self.edited_df.index[i]]["hex"]))
         self.show_custom(col2)
 
     def show_custom(self, col):
@@ -125,8 +124,7 @@ class Web:
             The following features are experimental and subject to errors and bugs.
             """)
         st.title("AI")
-        self.color_number = st.slider(
-            "AI Color", 1, 20, 8, 1, help="Number of colors")
+        self.color_number = st.slider("AI Color", 1, 20, 8, 1, help="Number of colors")
         self.ai_iter = st.slider(
             "AI Number of attempts",
             1,
@@ -144,8 +142,7 @@ class Web:
 
     def more_options(self):
         st.title("Anime Filter")
-        st.write(
-            "Simultaneous application of the Canny and DoG filters is deprecated.")
+        st.write("Simultaneous application of the Canny and DoG filters is deprecated.")
 
         st.subheader("DoG Filter")
         px_col_dog, smooth_col_dog = st.columns(2)
@@ -159,8 +156,7 @@ class Web:
         ) = st.columns(2)
 
         smooth_col_canny.subheader("Smooth Edge")
-        self.smooth_canny_filter = smooth_col_canny.checkbox(
-            "Smooth Canny Filter")
+        self.smooth_canny_filter = smooth_col_canny.checkbox("Smooth Canny Filter")
         self.anime_th1 = smooth_col_canny.slider(
             "Select threhsold1(minVal)",
             0.0,
@@ -208,6 +204,7 @@ class Web:
         self.decreaseColor = st.checkbox("decrease Color")
         self.saturation = st.slider("Select Saturation", 0.0, 5.0, 1.1, 0.1)
         self.brightness = st.slider("Select Brightness", 0.0, 2.0, 1.0, 0.1)
+        self.contrast = st.slider("Select Contrast", 0.0, 2.0, 1.0, 0.1)
         self.sharpness = st.slider("Select Sharpness", 0.0, 2.0, 1.0, 0.1)
 
     def get_image(self, upload):

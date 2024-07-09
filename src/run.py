@@ -47,6 +47,9 @@ Image size is reduced if the number of pixels exceeds FullHD (2,073,600).
     if web.brightness != 1:
         cimg = enhance.brightness(cimg, web.brightness)
 
+    if web.contrast != 1:
+        cimg = enhance.contrast(cimg, web.contrast)
+
     if web.sharpness != 1:
         cimg = enhance.sharpness(cimg, web.sharpness)
 

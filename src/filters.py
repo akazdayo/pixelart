@@ -90,7 +90,7 @@ class EdgeFilter:
     def morphology_erode(self, image):
         # kernel = np.ones((2, 2), np.uint8)
         # img = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        kernel = np.array(
+        kernel_3 = np.array(
             [
                 [0, 1, 0],
                 [1, 1, 1],
@@ -98,9 +98,10 @@ class EdgeFilter:
             ],
             dtype=np.uint8,
         )
+        kernel_2 = np.array([[0, 1], [1, 0]], dtype=np.uint8)
 
         erode_filtered = np.array(
-            cv2.morphologyEx(image, cv2.MORPH_ERODE, kernel, iterations=3), np.uint8
+            cv2.morphologyEx(image, cv2.MORPH_ERODE, kernel_2, iterations=3), np.uint8
         )
         return erode_filtered
 
@@ -126,6 +127,13 @@ class ImageEnhancer:
     def sharpness(self, image, value):
         img = Image.fromarray(image)
         enhancer = ImageEnhance.Sharpness(img)
+        result = enhancer.enhance(value)
+        result = np.array(result)
+        return result
+
+    def contrast(self, image, value):
+        img = Image.fromarray(image)
+        enhancer = ImageEnhance.Contrast(img)
         result = enhancer.enhance(value)
         result = np.array(result)
         return result
