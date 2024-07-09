@@ -61,7 +61,8 @@ Image size is reduced if the number of pixels exceeds FullHD (2,073,600).
         cimg = edges.dog(cimg)
 
     if web.morphology:
-        cimg = edges.morphology(cimg)
+        cimg = edges.morphology_gradient(cimg, cv2.MORPH_GRADIENT)
+        cimg = edges.morphology_gradient(cimg, cv2.MORPH_OPEN)
 
     web.now.write("### Now mosaic")
 

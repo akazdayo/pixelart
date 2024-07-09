@@ -69,12 +69,12 @@ class EdgeFilter:
         else:
             return result
 
-    def morphology_(self, base_image):
+    def morphology_gradient(self, base_image, op):
         gray_image = cv2.cvtColor(base_image, cv2.COLOR_BGR2GRAY)
 
         kernel = np.ones((2, 2), np.uint8)
         morphology_img = cv2.morphologyEx(
-            gray_image, cv2.MORPH_GRADIENT, kernel)
+            gray_image, op, kernel)
 
         _, binary_image = cv2.threshold(
             morphology_img, 200, 255, cv2.THRESH_BINARY_INV)  # しきい値 二値化
