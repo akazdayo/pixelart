@@ -47,10 +47,10 @@ class EdgeFilter:
             return e * 255
 
         # アルファチャンネルを分離
-        bg_image = img[:, :, :3]
+        base_image = img[:, :, :3]
         if len(img[0][0]) == 4:
             alpha = img[:, :, 3]
-        image = bg_image.copy()
+        image = base_image.copy()
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         image = np.array(image, dtype=np.float64)
         image = filter(image, 17, 40, 1.4, 0, 15)
@@ -62,12 +62,29 @@ class EdgeFilter:
         image = cv2.cvtColor(a, cv2.COLOR_RGB2BGR)
         if scratch:
             image = cv2.bitwise_not(image)
-        result = cv2.subtract(bg_image, image)
+        result = cv2.subtract(base_image, image)
         # アルファチャンネルを結合して返す
         if len(img[0][0]) == 4:
             return np.dstack([result, alpha])
         else:
             return result
+
+    def morphology_(self, base_image):
+        gray_image = cv2.cvtColor(base_image, cv2.COLOR_BGR2GRAY)
+
+        kernel = np.ones((2, 2), np.uint8)
+        morphology_img = cv2.morphologyEx(
+            gray_image, cv2.MORPH_GRADIENT, kernel)
+
+        _, binary_image = cv2.threshold(
+            morphology_img, 200, 255, cv2.THRESH_BINARY_INV)  # しきい値 二値化
+        binary_image = np.array(binary_image, np.uint8)
+
+        binary_image_bgr = cv2.cvtColor(morphology_img, cv2.COLOR_GRAY2BGR)
+        result = cv2.subtract(base_image, binary_image_bgr)
+
+        cv2.imwrite("result.jpg", binary_image_bgr)
+        return result
 
 
 class ImageEnhancer:
