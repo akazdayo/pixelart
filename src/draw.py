@@ -138,10 +138,6 @@ class Web:
             False,
             help="Remove the image transparency except perfect transparency",
         )
-        self.morphology = st.checkbox("Morphology Filter", False)
-        self.kuwahara = st.checkbox("Kuwahara Filter", False)
-        self.median = st.checkbox("Median Filter", False)
-        self.delete_transparent = st.checkbox("Delete transparent color", False)
 
     def more_options(self):
         st.title("Anime Filter")
@@ -199,6 +195,12 @@ class Web:
             help="The smaller the value, the more edges there are.(using cv2.Canny)",
             disabled=not self.pixel_canny_edge,
         )
+
+        st.title("Other Filters")
+        self.morphology = st.checkbox("Morphology Filter", False)
+        self.kuwahara = st.checkbox("Kuwahara Filter", False)
+        self.median = st.checkbox("Median Filter", False)
+        self.delete_transparent = st.checkbox("Delete transparent color", False)
 
         st.title("Convert Setting")
         self.no_expand = st.checkbox("No Expand Image")
