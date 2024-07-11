@@ -23,10 +23,17 @@ build-backend = "hatchling.build"
 
 [tool.rye]
 managed = true
-dev-dependencies = ["opencv-python>=4.10.0.84"]
+dev-dependencies = [
+    "ruff>=0.5.1",
+    "opencv-python>=4.10.0.84",
+]
 
 [tool.hatch.metadata]
 allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/pixelart"]
+
+[tool.pyright]
+venvPath = "."
+venv = ".venv"

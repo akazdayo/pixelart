@@ -105,6 +105,25 @@ class EdgeFilter:
         )
         return erode_filtered
 
+    @staticmethod
+    def kuwahara(im, n):
+        filt = np.zeros((2*n-1, 2*n-1))
+        filt[:n, :n] = 1 / n**2
+        filts = [np.roll(filt, (i*(n-1), j*(n-1)), axis=(0, 1)) for i, j in [(0, 0), (0, 1), (1, 0), (1, 1)]]
+        u = np.array([cv2.filter2D(im, -1, f) for f in filts])
+        u2 = [cv2.filter2D(im**2, -1, f) for f in filts]
+        idx = np.argmin([(i-j**2).sum(2) for i, j in zip(u2, u)], 0)
+        ix, iy = np.indices(im.shape[:2])
+        return u[idx, ix, iy]
+
+    def apply_kuwahara(self, image):
+        filtered = self.kuwahara(image, 5)
+        return filtered
+
+    def median(self, image, size):
+        return cv2.medianBlur(image, size)
+
+
 
 class ImageEnhancer:
     def __init__(self) -> None:

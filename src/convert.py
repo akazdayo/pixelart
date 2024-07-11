@@ -59,14 +59,11 @@ class Convert:
 
     def resize_image(self, image):
         img_size = image.shape[0] * image.shape[1]
-        if img_size > 2073600:
-            # 画像をFull HDよりも小さくする
-            # 面積から辺の比に直す。
-            # 面積比 相似比 検索
-            ratio = (img_size / 2073600) ** 0.5
-            new_height = int(image.shape[0] / ratio)
-            new_width = int(image.shape[1] / ratio)
-            result = cv2.resize(image, (new_width, new_height))
+        # 画像をFull HDよりも小さくする
+        ratio = (img_size / 2073600) ** 0.5
+        new_height = int(image.shape[0] / ratio)
+        new_width = int(image.shape[1] / ratio)
+        result = cv2.resize(image, (new_width, new_height))
         return result
 
     def delete_alpha(self, image):
@@ -83,6 +80,26 @@ class Convert:
                         conv_a[i][j] = 255
 
             merged = cv2.merge([b, g, r, conv_a])
+            return merged
+        else:
+            # アルファチャンネルがない場合はそのまま返す
+            return image
+
+    def delete_transparent_color(self, image):
+        # 画像がアルファチャンネルを持っているか確認
+        if image.shape[2] == 4:
+            b = image[:, :, 0]
+            g = image[:, :, 1]
+            r = image[:, :, 2]
+            a = image[:, :, 3]
+            for i, x in enumerate(a):
+                for j, y in enumerate(x):
+                    if y == 0:
+                        b[i][j] = 255
+                        g[i][j] = 255
+                        r[i][j] = 255
+
+            merged = cv2.merge([b, g, r, a])
             return merged
         else:
             # アルファチャンネルがない場合はそのまま返す

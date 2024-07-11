@@ -139,6 +139,9 @@ class Web:
             help="Remove the image transparency except perfect transparency",
         )
         self.morphology = st.checkbox("Morphology Filter", False)
+        self.kuwahara = st.checkbox("Kuwahara Filter", False)
+        self.median = st.checkbox("Median Filter", False)
+        self.delete_transparent = st.checkbox("Delete transparent color", False)
 
     def more_options(self):
         st.title("Anime Filter")

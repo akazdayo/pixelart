@@ -28,7 +28,7 @@ def main():
     if img.ndim == 2:
         img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
     height, width = img.shape[:2]
-    if height * width < 2100000:
+    if height * width < 2073600:
         pass
     else:
         img = conv.resize_image(img)
@@ -53,8 +53,17 @@ Image size is reduced if the number of pixels exceeds FullHD (2,073,600).
     if web.sharpness != 1:
         cimg = enhance.sharpness(cimg, web.sharpness)
 
+    if web.delete_transparent:
+        cimg = conv.delete_transparent_color(cimg)
+
     if web.scratch:
         cimg = edges.dog(cimg, True)
+
+    if web.median:
+        cimg = edges.median(cimg, 15)
+
+    if web.kuwahara:
+        cimg = edges.apply_kuwahara(cimg)
 
     if web.pixel_canny_edge:
         web.now.write("### Pixel Edge in progress")
