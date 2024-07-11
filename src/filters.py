@@ -11,6 +11,7 @@ class EdgeFilter:
     def canny(self, image, th1, th2):
         # アルファチャンネルを分離
         bgr = image[:, :, :3]
+        alpha = []
         if len(image[0][0]) == 4:
             alpha = image[:, :, 3]
 
@@ -48,6 +49,7 @@ class EdgeFilter:
 
         # アルファチャンネルを分離
         base_image = img[:, :, :3]
+        alpha = []
         if len(img[0][0]) == 4:
             alpha = img[:, :, 3]
         image = base_image.copy()

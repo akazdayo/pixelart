@@ -13,12 +13,12 @@ class Convert:
             return color
 
     def convert(self, img, option, custom=None):
-        def color_change(r, g, b, color_palette):
+        def color_change(r, g, b, color_palette) -> list[int]:
             if (r, g, b) in self.color_dict:
                 return self.color_dict[(r, g, b)]
             # 最も近い色を見つける
             min_distance = float("inf")
-            color_name = None
+            color_name:list[int] = []
             for color in color_palette:
                 # ユークリッド距離
                 # 差分を取って2乗すると距離になる。

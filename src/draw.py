@@ -8,7 +8,6 @@ from PIL import Image
 
 class Web:
     def __init__(self) -> None:
-        self.col1, self.col2 = None, None
         self.draw_text()
 
     def file_dir(self):
