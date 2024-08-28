@@ -68,5 +68,6 @@ Displays the colors in the default color palette
 # Develop
 ```
 $ rye sync
+$ overlay ./.venv/bin/activate
 $ streamlit run main.py
 ```
