@@ -64,3 +64,9 @@ Changes the number of colors used when using the AI Color palette.
 # Color Sample
 Displays the colors in the default color palette  
 ![color_sample](./image/sample.png)
+
+# Develop
+```
+$ rye sync
+$ streamlit run main.py
+```
