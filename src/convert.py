@@ -1,5 +1,8 @@
 import csv
 import cv2
+import numpy as np
+import pixelart_modules as pm
+import time
 
 
 class Convert:
@@ -13,28 +16,6 @@ class Convert:
             return color
 
     def convert(self, img, option, custom=None):
-        def color_change(r, g, b, color_palette) -> list[int]:
-            if (r, g, b) in self.color_dict:
-                return self.color_dict[(r, g, b)]
-            # 最も近い色を見つける
-            min_distance = float("inf")
-            color_name:list[int] = []
-            for color in color_palette:
-                # ユークリッド距離
-                # 差分を取って2乗すると距離になる。
-                distance = (
-                    (int(r) - color[0]) ** 2
-                    + (int(g) - color[1]) ** 2
-                    + (int(b) - color[2]) ** 2
-                )
-                if distance < min_distance:
-                    min_distance = distance
-                    color_name = color
-            self.color_dict[(r, g, b)] = color_name
-            return color_name
-
-        w, h = img.shape[:2]
-        changed = img.copy()
         # 選択されたcsvファイルを読み込む
         color_palette = []
         if option != "Custom":
@@ -44,17 +25,9 @@ class Convert:
                 return
             color_palette = custom
 
-        for height in range(h):
-            for width in range(w):
-                color = color_change(
-                    img[width][height][0],
-                    img[width][height][1],
-                    img[width][height][2],
-                    color_palette,
-                )
-                changed[width][height][0] = color[0]  # 赤
-                changed[width][height][1] = color[1]  # 緑
-                changed[width][height][2] = color[2]  # 青
+        # convert関数はRustに移しました。
+        # https://github.com/akazdayo/pixelart-modules
+        changed = pm.convert(img, np.array(color_palette, dtype=np.uint64))
         return changed
 
     def resize_image(self, image):

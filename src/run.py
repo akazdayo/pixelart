@@ -1,15 +1,11 @@
 import streamlit as st
 import cv2
 import pandas as pd
-import warnings
 import gc
 import src.ai as ai
 import src.convert as convert
 import src.filters as filters
 import src.draw as draw
-import numpy as np
-
-warnings.simplefilter("ignore")
 
 
 def main():

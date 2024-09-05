@@ -13,6 +13,7 @@ dependencies = [
     "scikit-learn>=1.5.1",
     "watchdog>=4.0.1",
     "colorama>=0.4.6",
+    "pixelart-modules>=0.1.0",
 ]
 readme = "README.md"
 requires-python = ">= 3.10"
