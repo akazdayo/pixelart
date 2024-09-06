@@ -2,7 +2,6 @@ import csv
 import cv2
 import numpy as np
 import pixelart_modules as pm
-import time
 
 
 class Convert:
