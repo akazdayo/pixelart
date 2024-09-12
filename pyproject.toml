@@ -24,7 +24,11 @@ build-backend = "hatchling.build"
 
 [tool.rye]
 managed = true
-dev-dependencies = ["ruff>=0.5.1", "opencv-python>=4.10.0.84"]
+dev-dependencies = [
+    "ruff>=0.5.1",
+    "opencv-python>=4.10.0.84",
+    "memray>=1.14.0",
+]
 
 [tool.hatch.metadata]
 allow-direct-references = true

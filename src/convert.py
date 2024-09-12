@@ -2,6 +2,8 @@ import csv
 import cv2
 import numpy as np
 import pixelart_modules as pm
+from numpy.typing import NDArray
+from typing import cast
 
 
 class Convert:
@@ -14,19 +16,22 @@ class Convert:
             color = [[int(v) for v in row] for row in reader]
             return color
 
-    def convert(self, img, option, custom=None):
+    def convert(self, img, option, custom=None) -> NDArray[np.uint64]:
         # 選択されたcsvファイルを読み込む
         color_palette = []
         if option != "Custom":
             color_palette = self.read_csv("./color/" + option + ".csv")
         else:
-            if custom == [] or custom is None:
-                return
+            if not custom:
+                raise ValueError("Custom Palette is empty.")
             color_palette = custom
 
         # convert関数はRustに移しました。
         # https://github.com/akazdayo/pixelart-modules
-        changed = pm.convert(img, np.array(color_palette, dtype=np.uint64))
+        changed = cast(
+            NDArray[np.uint64],
+            pm.convert(img, np.array(color_palette, dtype=np.uint64)),
+        )
         return changed
 
     def resize_image(self, image):

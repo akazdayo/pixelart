@@ -45,7 +45,7 @@ class Web:
                 "Custom Palette",
             ),
         )
-        self.slider = st.slider("Select Mosaic Ratio", 0.01, 1.0, 0.3, 0.01)
+        self.slider = st.slider("Select Mosaic Ratio", 0.01, 0.5, 0.3, 0.01)
         # self.custom = st.checkbox('Custom Palette')
 
         self.share()
@@ -143,36 +143,11 @@ class Web:
         st.write("Simultaneous application of the Canny and DoG filters is deprecated.")
 
         st.subheader("DoG Filter")
-        px_col_dog, smooth_col_dog = st.columns(2)
-        self.smooth_dog_filter = px_col_dog.checkbox("Smooth DoG Filter")
+        (smooth_col_dog,) = st.columns(1)
         self.px_dog_filter = smooth_col_dog.checkbox("Pixel DoG Filter", True)
 
         st.subheader("Canny Filter")
-        (
-            smooth_col_canny,
-            px_col_canny,
-        ) = st.columns(2)
-
-        smooth_col_canny.subheader("Smooth Edge")
-        self.smooth_canny_filter = smooth_col_canny.checkbox("Smooth Canny Filter")
-        self.anime_th1 = smooth_col_canny.slider(
-            "Select threhsold1(minVal)",
-            0.0,
-            500.0,
-            0.0,
-            5.0,
-            help="The smaller the value, the more edges there are.(using cv2.Canny)",
-            disabled=not self.smooth_canny_filter,
-        )
-        self.anime_th2 = smooth_col_canny.slider(
-            "Select threhsold2(maxVal)",
-            0.0,
-            500.0,
-            0.0,
-            5.0,
-            help="The smaller the value, the more edges there are.(using cv2.Canny)",
-            disabled=not self.smooth_canny_filter,
-        )
+        (px_col_canny,) = st.columns(1)
 
         px_col_canny.subheader("Pixel Edge")
         self.pixel_canny_edge = px_col_canny.checkbox("Pixel Canny Filter")

@@ -100,14 +100,6 @@ Image size is reduced if the number of pixels exceeds FullHD (2,073,600).
         web.now.write("### Decrease Color in progress")
         cimg = enhance.decrease(cimg)
 
-    if web.smooth_canny_filter:
-        web.now.write("### Edge filter in progress")
-        cimg = edges.canny(cimg, web.anime_th1, web.anime_th2)
-
-    if web.smooth_dog_filter:
-        web.now.write("### Edge filter in progress")
-        cimg = edges.dog(cimg)
-
     if web.delete_alpha:
         web.now.write("### Delete Alpha in progress")
         cimg = conv.delete_alpha(cimg)
