@@ -26,6 +26,7 @@ charset-normalizer==3.3.2
 click==8.1.7
     # via streamlit
 colorama==0.4.6
+    # via click
     # via pixelart
 gitdb==4.0.11
     # via gitpython
@@ -35,7 +36,6 @@ idna==3.7
     # via requests
 jinja2==3.1.4
     # via altair
-    # via memray
     # via pydeck
 joblib==1.4.2
     # via scikit-learn
@@ -43,21 +43,14 @@ jsonschema==4.22.0
     # via altair
 jsonschema-specifications==2023.12.1
     # via jsonschema
-linkify-it-py==2.0.3
-    # via markdown-it-py
 markdown-it-py==3.0.0
-    # via mdit-py-plugins
     # via rich
-    # via textual
 markupsafe==2.1.5
     # via jinja2
 maturin==1.7.1
     # via pixelart-modules
-mdit-py-plugins==0.4.2
-    # via markdown-it-py
 mdurl==0.1.2
     # via markdown-it-py
-memray==1.14.0
 numpy==2.1.1
     # via altair
     # via opencv-python
@@ -83,8 +76,6 @@ pillow==10.4.0
     # via streamlit
 pixelart-modules==0.1.0
     # via pixelart
-platformdirs==4.3.2
-    # via textual
 protobuf==5.27.2
     # via streamlit
 pyarrow==16.1.0
@@ -103,9 +94,7 @@ referencing==0.35.1
 requests==2.32.3
     # via streamlit
 rich==13.7.1
-    # via memray
     # via streamlit
-    # via textual
 rpds-py==0.18.1
     # via jsonschema
     # via referencing
@@ -118,28 +107,27 @@ six==1.16.0
     # via python-dateutil
 smmap==5.0.1
     # via gitdb
-streamlit==1.38.0
+streamlit==1.39.0
     # via pixelart
 tenacity==8.5.0
     # via streamlit
-textual==0.79.1
-    # via memray
 threadpoolctl==3.5.0
     # via scikit-learn
 toml==0.10.2
     # via streamlit
+tomli==2.0.2
+    # via maturin
 toolz==0.12.1
     # via altair
 tornado==6.4.1
     # via streamlit
 typing-extensions==4.12.2
+    # via altair
     # via streamlit
-    # via textual
 tzdata==2024.1
     # via pandas
-uc-micro-py==1.0.3
-    # via linkify-it-py
 urllib3==2.2.2
     # via requests
 watchdog==4.0.2
     # via pixelart
+    # via streamlit

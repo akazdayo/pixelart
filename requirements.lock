@@ -26,6 +26,7 @@ charset-normalizer==3.3.2
 click==8.1.7
     # via streamlit
 colorama==0.4.6
+    # via click
     # via pixelart
 gitdb==4.0.11
     # via gitpython
@@ -103,7 +104,7 @@ six==1.16.0
     # via python-dateutil
 smmap==5.0.1
     # via gitdb
-streamlit==1.38.0
+streamlit==1.39.0
     # via pixelart
 tenacity==8.5.0
     # via streamlit
@@ -111,11 +112,14 @@ threadpoolctl==3.5.0
     # via scikit-learn
 toml==0.10.2
     # via streamlit
+tomli==2.0.2
+    # via maturin
 toolz==0.12.1
     # via altair
 tornado==6.4.1
     # via streamlit
 typing-extensions==4.12.2
+    # via altair
     # via streamlit
 tzdata==2024.1
     # via pandas
@@ -123,3 +127,4 @@ urllib3==2.2.2
     # via requests
 watchdog==4.0.2
     # via pixelart
+    # via streamlit
