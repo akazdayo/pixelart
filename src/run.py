@@ -8,6 +8,11 @@ import src.filters as filters
 import src.draw as draw
 import base64
 
+warning_message = """
+The size of the image has been reduced because the file size is too large.\n
+Image size is reduced if the number of pixels exceeds FullHD (2,073,600).
+"""
+
 
 def cv_to_base64(img):
     _, encoded = cv2.imencode(".png", img)
@@ -36,14 +41,14 @@ def main():
         pass
     else:
         img = conv.resize_image(img)
-        web.message.warning("""
-The size of the image has been reduced because the file size is too large.\n
-Image size is reduced if the number of pixels exceeds FullHD (2,073,600).
-        """)
+        web.message.warning(warning_message)
 
     cimg = img.copy()
     del web.upload
-    web.col1.image(cimg)
+
+    encoded_img = cv_to_base64(cv2.cvtColor(cimg, cv2.COLOR_BGR2RGB))
+
+    web.col1.image(f"data:image/png;base64,{encoded_img}", use_column_width=True)
 
     if web.saturation != 1:
         cimg = enhance.saturation(cimg, web.saturation)
@@ -89,12 +94,10 @@ Image size is reduced if the number of pixels exceeds FullHD (2,073,600).
         if web.color == "Custom Palette" or web.color == "AI":
             if web.color == "AI" and web.color != "Custom Palette":
                 web.now.write("### AI Palette in progress")
-                ai_color = ai_palette.get_color(
-                    cimg, web.color_number, web.ai_iter)
+                ai_color = ai_palette.get_color(cimg, web.color_number, web.ai_iter)
 
                 with st.expander("AI Palette"):
-                    web.custom_palette(pd.DataFrame(
-                        {"hex": c} for c in ai_color))
+                    web.custom_palette(pd.DataFrame({"hex": c} for c in ai_color))
 
             web.now.write("### Color Convert in progress")
             cimg = conv.convert(cimg, "Custom", web.rgblist)
@@ -104,8 +107,7 @@ Image size is reduced if the number of pixels exceeds FullHD (2,073,600).
             cimg = conv.convert(cimg, web.color)
 
     if not web.no_expand:
-        cimg = cv2.resize(
-            cimg, img.shape[:2][::-1], interpolation=cv2.INTER_NEAREST)
+        cimg = cv2.resize(cimg, img.shape[:2][::-1], interpolation=cv2.INTER_NEAREST)
 
     if web.decreaseColor:
         web.now.write("### Decrease Color in progress")
@@ -118,15 +120,13 @@ Image size is reduced if the number of pixels exceeds FullHD (2,073,600).
     encoded_img = cv_to_base64(cimg)
 
     # Convert BGR to RGB
-    if cimg.dtype != 'uint8':
+    if cimg.dtype != "uint8":
         cimg = cv2.convertScaleAbs(cimg)
     cimg_rgb = cv2.cvtColor(cimg, cv2.COLOR_BGR2RGB)
     encoded_img = cv_to_base64(cimg_rgb)
 
-    web.col2.image(
-        f"data:image/png;base64,{encoded_img}", use_column_width=True)
-    st.sidebar.image(
-        f"data:image/png;base64,{encoded_img}", use_column_width=True)
+    web.col2.image(f"data:image/png;base64,{encoded_img}", use_column_width=True)
+    st.sidebar.image(f"data:image/png;base64,{encoded_img}", use_column_width=True)
     web.now.write("")
     del conv.color_dict
     gc.collect()
