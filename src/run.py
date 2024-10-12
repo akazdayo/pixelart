@@ -74,10 +74,6 @@ def main():
     if web.kuwahara:
         cimg = edges.apply_kuwahara(cimg)
 
-    if web.pixel_canny_edge:
-        web.now.write("### Pixel Edge in progress")
-        cimg = edges.canny(cimg, web.px_th1, web.px_th2)
-
     if web.px_dog_filter:
         web.now.write("### Pixel Edge in progress")
         cimg = edges.dog(cimg)
@@ -86,9 +82,8 @@ def main():
         cimg = edges.morphology_erode(cimg)
 
     web.now.write("### Now mosaic")
-
-    if web.slider != 1:
-        cimg = enhance.mosaic(cimg, web.slider)
+    # cimg = enhance.mosaic(cimg, web.slider)
+    cimg = enhance.mosaic(cimg, web.pixel_grid_width, web.pixel_grid_height)
 
     if not web.no_convert:
         if web.color == "Custom Palette" or web.color == "AI":

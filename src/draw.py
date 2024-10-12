@@ -31,7 +31,7 @@ class Web:
         )
         self.col1, self.col2 = st.columns(2)
         st.write("""Link copy is not available.Please copy or download the image.""")
-        self.color = st.selectbox(
+        self.color = st.selectbox(  # TODO: このあたりわかりにくいから将来的に修正したい
             "Select color Palette",
             (
                 "AI",
@@ -45,8 +45,18 @@ class Web:
                 "Custom Palette",
             ),
         )
+
+        # pixelの大きさを調整する
         self.slider = st.slider("Select Mosaic Ratio", 0.01, 0.5, 0.3, 0.01)
-        # self.custom = st.checkbox('Custom Palette')
+
+        grid_col1, grid_col2 = st.columns(2)
+
+        self.pixel_grid_width = grid_col1.number_input(
+            "Select Pixel Grid(Width)", 1, 512, 32
+        )
+        self.pixel_grid_height = grid_col2.number_input(
+            "Select Pixel Grid(Height)", 1, 512, 32
+        )
 
         self.share()
 
@@ -85,7 +95,7 @@ class Web:
                 rgb_values.append(self.hex_to_rgb(hex_code[1:]))
         return rgb_values
 
-    def custom_palette(
+    def custom_palette(  # TODO: pandasからndarrayに変更したい
         self,
         df=pd.DataFrame(
             [
@@ -98,7 +108,6 @@ class Web:
         ),
     ):
         st.title("Add Palette")
-        # _ = st.color_picker('Pick A Color', '#ffffff')
         col1, col2 = st.columns(2)
         self.edited_df = col1.data_editor(df, num_rows="dynamic")
         self.rgblist = list()
@@ -143,32 +152,7 @@ class Web:
         st.write("Simultaneous application of the Canny and DoG filters is deprecated.")
 
         st.subheader("DoG Filter")
-        (smooth_col_dog,) = st.columns(1)
-        self.px_dog_filter = smooth_col_dog.checkbox("Pixel DoG Filter", True)
-
-        st.subheader("Canny Filter")
-        (px_col_canny,) = st.columns(1)
-
-        px_col_canny.subheader("Pixel Edge")
-        self.pixel_canny_edge = px_col_canny.checkbox("Pixel Canny Filter")
-        self.px_th1 = px_col_canny.slider(
-            "Select Pixel threhsold1(minVal)",
-            0.0,
-            500.0,
-            100.0,
-            5.0,
-            help="The smaller the value, the more edges there are.(using cv2.Canny)",
-            disabled=not self.pixel_canny_edge,
-        )
-        self.px_th2 = px_col_canny.slider(
-            "Select Pixel threhsold2(maxVal)",
-            0.0,
-            500.0,
-            100.0,
-            5.0,
-            help="The smaller the value, the more edges there are.(using cv2.Canny)",
-            disabled=not self.pixel_canny_edge,
-        )
+        self.px_dog_filter = st.checkbox("Pixel DoG Filter", True)
 
         st.title("Other Filters")
         self.morphology = st.checkbox("Morphology Filter", False)
