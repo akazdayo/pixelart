@@ -172,7 +172,7 @@ class Web:
 
         st.title("Convert Setting")
         self.no_expand = st.checkbox("No Expand Image")
-        self.scratch = st.checkbox("Scartch Filter")
+        self.scratch = st.checkbox("Scratch Filter")
         self.no_convert = st.checkbox("No Color Convert")
         self.decreaseColor = st.checkbox("decrease Color")
         self.saturation = st.slider("Select Saturation", 0.0, 5.0, 1.1, 0.1)
