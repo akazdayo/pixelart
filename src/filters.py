@@ -161,8 +161,17 @@ class ImageEnhancer:
         result = np.array(result)
         return result
 
-    def mosaic(self, image, width, height):
-        small = cv2.resize(image, (width, height), interpolation=cv2.INTER_NEAREST)
+    def slider_mosaic(self, image, ratio):
+        small = cv2.resize(
+            image, None, fx=ratio, fy=ratio, interpolation=cv2.INTER_NEAREST
+        )
+        return small
+
+    def grid_mosaic(self, image, size):
+        aspect = image.shape[0] / image.shape[1]
+        small = cv2.resize(
+            image, (size, int(size * aspect)), interpolation=cv2.INTER_NEAREST
+        )
         return small
 
     def decrease(self, image):

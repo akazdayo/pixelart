@@ -83,7 +83,10 @@ def main():
 
     web.now.write("### Now mosaic")
     # cimg = enhance.mosaic(cimg, web.slider)
-    cimg = enhance.mosaic(cimg, web.pixel_grid_width, web.pixel_grid_height)
+    if web.pixel_dropdown == "Slider":
+        cimg = enhance.slider_mosaic(cimg, web.slider)
+    else:
+        cimg = enhance.grid_mosaic(cimg, web.pixel_grid)
 
     if not web.no_convert:
         if web.color == "Custom Palette" or web.color == "AI":

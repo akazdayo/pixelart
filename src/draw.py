@@ -47,15 +47,24 @@ class Web:
         )
 
         # pixelの大きさを調整する
-        self.slider = st.slider("Select Mosaic Ratio", 0.01, 0.5, 0.3, 0.01)
-
-        grid_col1, grid_col2 = st.columns(2)
-
-        self.pixel_grid_width = grid_col1.number_input(
-            "Select Pixel Grid(Width)", 1, 512, 32
+        self.pixel_dropdown = st.selectbox(
+            "Select Pixel Size", ("Pixel Grid", "Slider")
         )
-        self.pixel_grid_height = grid_col2.number_input(
-            "Select Pixel Grid(Height)", 1, 512, 32
+
+        self.pixel_grid = st.number_input(
+            "Select Pixel Grid",
+            1,
+            512,
+            256,
+            disabled=self.pixel_dropdown != "Pixel Grid",
+        )
+        self.slider = st.slider(
+            "Select Mosaic Ratio",
+            0.01,
+            0.5,
+            0.3,
+            0.01,
+            disabled=self.pixel_dropdown != "Slider",
         )
 
         self.share()
@@ -74,12 +83,13 @@ class Web:
         st.write("Source Code : https://github.com/akazdayo/pixelart")
 
     def share(self):
-        components.html(
-            """
-<a href="https://twitter.com/share?ref_src=twsrc%5Etfw" class="twitter-share-button" data-show-count="false" data-text="PixelArt-Converter\nFascinating tool to convert images into pixel art!\n By @akazdayo" data-url="https://pixelart.streamlit.app" data-hashtags="pixelart,streamlit">Tweet</a><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
-            """,
-            height=30,
-        )
+        with st.sidebar:
+            components.html(
+                """
+    <a href="https://twitter.com/share?ref_src=twsrc%5Etfw" class="twitter-share-button" data-show-count="false" data-text="PixelArt-Converter\nFascinating tool to convert images into pixel art!\n By @akazdayo" data-url="https://pixelart.streamlit.app" data-hashtags="pixelart,streamlit">Tweet</a><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+                """,
+                height=30,
+            )
 
     def hex_to_rgb(self, hex_code):
         hex_code = hex_code.replace("#", "")
