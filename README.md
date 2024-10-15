@@ -70,3 +70,6 @@ Displays the colors in the default color palette
 $ rye sync
 $ rye run streamlit run main.py
 ```
+## What is pixelart-modules?
+The conversion process is written in Rust.
+https://github.com/akazdayo/pixelart-modules

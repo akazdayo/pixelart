@@ -109,12 +109,15 @@ class EdgeFilter:
 
     @staticmethod
     def kuwahara(im, n):
-        filt = np.zeros((2*n-1, 2*n-1))
+        filt = np.zeros((2 * n - 1, 2 * n - 1))
         filt[:n, :n] = 1 / n**2
-        filts = [np.roll(filt, (i*(n-1), j*(n-1)), axis=(0, 1)) for i, j in [(0, 0), (0, 1), (1, 0), (1, 1)]]
+        filts = [
+            np.roll(filt, (i * (n - 1), j * (n - 1)), axis=(0, 1))
+            for i, j in [(0, 0), (0, 1), (1, 0), (1, 1)]
+        ]
         u = np.array([cv2.filter2D(im, -1, f) for f in filts])
         u2 = [cv2.filter2D(im**2, -1, f) for f in filts]
-        idx = np.argmin([(i-j**2).sum(2) for i, j in zip(u2, u)], 0)
+        idx = np.argmin([(i - j**2).sum(2) for i, j in zip(u2, u)], 0)
         ix, iy = np.indices(im.shape[:2])
         return u[idx, ix, iy]
 
@@ -124,7 +127,6 @@ class EdgeFilter:
 
     def median(self, image, size):
         return cv2.medianBlur(image, size)
-
 
 
 class ImageEnhancer:
@@ -159,9 +161,16 @@ class ImageEnhancer:
         result = np.array(result)
         return result
 
-    def mosaic(self, image, ratio):
+    def slider_mosaic(self, image, ratio):
         small = cv2.resize(
             image, None, fx=ratio, fy=ratio, interpolation=cv2.INTER_NEAREST
+        )
+        return small
+
+    def grid_mosaic(self, image, size):
+        aspect = image.shape[0] / image.shape[1]
+        small = cv2.resize(
+            image, (size, int(size * aspect)), interpolation=cv2.INTER_NEAREST
         )
         return small
 
