@@ -48,7 +48,7 @@ def main():
 
     encoded_img = cv_to_base64(cv2.cvtColor(cimg, cv2.COLOR_BGR2RGB))
 
-    web.col1.image(f"data:image/png;base64,{encoded_img}", use_column_width=True)
+    web.col1.image(f"data:image/png;base64,{encoded_img}", use_container_width=True)
 
     if web.saturation != 1:
         cimg = enhance.saturation(cimg, web.saturation)
@@ -123,8 +123,8 @@ def main():
     cimg_rgb = cv2.cvtColor(cimg, cv2.COLOR_BGR2RGB)
     encoded_img = cv_to_base64(cimg_rgb)
 
-    web.col2.image(f"data:image/png;base64,{encoded_img}", use_column_width=True)
-    st.sidebar.image(f"data:image/png;base64,{encoded_img}", use_column_width=True)
+    web.col2.image(f"data:image/png;base64,{encoded_img}", use_container_width=True)
+    st.sidebar.image(f"data:image/png;base64,{encoded_img}", use_container_width=True)
     web.now.write("")
     del conv.color_dict
     gc.collect()
