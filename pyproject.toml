@@ -6,7 +6,7 @@ authors = [
     { name = "akazdayo", email = "82073147+akazdayo@users.noreply.github.com" },
 ]
 dependencies = [
-    "streamlit>=1.39.0",
+    "streamlit>=1.41.1",
     "opencv-python-headless>=4.10.0.84",
     "numpy>=2.1.1",
     "pillow>=10.4.0",
