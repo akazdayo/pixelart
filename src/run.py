@@ -73,7 +73,7 @@ def main():
     if web.kuwahara:
         cimg = edges.apply_kuwahara(cimg)
 
-    if web.px_dog_filter:
+    if web.px_dog_filter and not web.scratch:
         web.now.write("### Pixel Edge in progress")
         cimg = edges.dog(cimg)
 
