@@ -65,8 +65,9 @@ opencv-python-headless==4.10.0.84
 packaging==24.1
     # via altair
     # via streamlit
-pandas==2.2.2
+pandas==2.2.3
     # via altair
+    # via pixelart
     # via streamlit
 pillow==10.4.0
     # via pixelart

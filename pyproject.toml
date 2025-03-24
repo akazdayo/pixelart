@@ -14,6 +14,7 @@ dependencies = [
     "watchdog>=4.0.2",
     "colorama>=0.4.6",
     "pixelart-modules>=0.1.0",
+    "pandas>=2.2.3",
 ]
 readme = "README.md"
 requires-python = ">= 3.10"
