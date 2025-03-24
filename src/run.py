@@ -1,6 +1,5 @@
 import streamlit as st
 import cv2
-import pandas as pd
 import gc
 import src.ai as ai
 import src.convert as convert
@@ -95,7 +94,7 @@ def main():
                 ai_color = ai_palette.get_color(cimg, web.color_number, web.ai_iter)
 
                 with st.expander("AI Palette"):
-                    web.custom_palette(pd.DataFrame({"hex": c} for c in ai_color))
+                    web.custom_palette(ai_color)
 
             web.now.write("### Color Convert in progress")
             cimg = conv.convert(cimg, "Custom", web.rgblist)

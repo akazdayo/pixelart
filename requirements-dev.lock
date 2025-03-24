@@ -69,7 +69,6 @@ packaging==24.1
     # via streamlit
 pandas==2.2.3
     # via altair
-    # via pixelart
     # via streamlit
 pillow==10.4.0
     # via pixelart
