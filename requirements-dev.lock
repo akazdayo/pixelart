@@ -115,14 +115,11 @@ threadpoolctl==3.5.0
     # via scikit-learn
 toml==0.10.2
     # via streamlit
-tomli==2.0.2
-    # via maturin
 toolz==0.12.1
     # via altair
 tornado==6.4.1
     # via streamlit
 typing-extensions==4.12.2
-    # via altair
     # via streamlit
 tzdata==2024.1
     # via pandas
