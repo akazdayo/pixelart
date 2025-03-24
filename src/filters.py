@@ -69,6 +69,7 @@ class EdgeFilter:
 
         if scratch:
             image = cv2.bitwise_not(image)
+            image = self.morphology_erode(image)
         result = cv2.subtract(base_image, image)
 
         # アルファチャンネルを結合して返す

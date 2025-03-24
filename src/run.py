@@ -77,7 +77,8 @@ def main():
         web.now.write("### Pixel Edge in progress")
         cimg = edges.dog(cimg)
 
-    if web.morphology:
+    if web.morphology and not web.scratch:
+        # MorphologyとScratchは同時適用するとキモくなる
         cimg = edges.morphology_erode(cimg)
 
     web.now.write("### Now mosaic")

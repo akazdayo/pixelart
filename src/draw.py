@@ -35,7 +35,9 @@ class Web:
             "Upload Image", type=["jpg", "jpeg", "png", "webp", "jfif"]
         )
         self.col1, self.col2 = st.columns(2)
-        st.write("""Link copy is not available. Please copy or download the image.""")
+        st.write(
+            "Link copy of image is not available. Please copy or download the image."
+        )
 
     def setup_color_settings(self):
         """色設定関連のUIを設定"""
