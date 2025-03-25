@@ -3,6 +3,7 @@ import streamlit.components.v1 as components
 import os
 import numpy as np
 from PIL import Image
+import uuid
 
 
 class Web:
@@ -44,6 +45,7 @@ class Web:
             "Select color Palette",
             (
                 "AI",
+                "Custom Palette",
                 "cold",
                 "gold",
                 "pale",
@@ -141,15 +143,40 @@ class Web:
     def custom_palette(
         self, colors=["#FF0000", "#00FF00", "#0000FF", "#FFFFFF", "#000000"]
     ):
-        """カスタムパレットを作成するUIを表示し、RGB値のリストを生成する"""
+        """カスタムパレットを作成、管理するUIを表示し、RGB値のリストを生成する"""
 
-        st.title("Add Palette")
+        st.title("Custom Palette")
 
-        # カスタムカラーピッカーUI
-        color_inputs = []
-        for i, default_color in enumerate(colors):
-            color = st.color_picker(f"Color {i + 1}", default_color)
-            color_inputs.append(color)
+        # セッションステートの初期化
+        if 'custom_colors' not in st.session_state:
+            st.session_state.custom_colors = colors.copy()
+
+        col1, col2 = st.columns([3, 1])
+
+        with col1:
+            # カスタムカラーピッカーUI
+            color_inputs = []
+            updated_colors = st.session_state.custom_colors.copy()
+
+            for i, color in enumerate(updated_colors):
+                cols = st.columns([4, 1])
+                with cols[0]:
+                    new_color = st.color_picker(
+                        f"Color {i + 1}", color, key=str(uuid.uuid4()))
+                    color_inputs.append(new_color)
+                with cols[1]:
+                    if st.button("削除", key=str(uuid.uuid4())):
+                        st.session_state.custom_colors.pop(i)
+                        st.rerun()
+
+        with col2:
+            # 新しい色を追加するボタン
+            if st.button("➕ 新しい色を追加", key=str(uuid.uuid4())):
+                st.session_state.custom_colors.append("#FFFFFF")
+                st.rerun()
+
+        # セッションステートの更新
+        st.session_state.custom_colors = color_inputs
 
         # RGB値のリストを生成
         self.rgblist = self.hex_to_rgb(color_inputs)
