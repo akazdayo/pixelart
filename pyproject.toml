@@ -6,13 +6,11 @@ authors = [
     { name = "akazdayo", email = "82073147+akazdayo@users.noreply.github.com" },
 ]
 dependencies = [
-    "streamlit>=1.41.1",
-    "opencv-python-headless>=4.10.0.84",
-    "numpy>=2.1.1",
-    "pillow>=10.4.0",
-    "scikit-learn>=1.5.1",
-    "watchdog>=4.0.2",
-    "colorama>=0.4.6",
+    "streamlit>=1.43.2",
+    "opencv-python-headless>=4.11.0.86",
+    "numpy>=2.2.4",
+    "pillow>=11.1.0",
+    "scikit-learn>=1.6.1",
     "pixelart-modules>=0.1.0",
 ]
 readme = "README.md"
@@ -24,7 +22,11 @@ build-backend = "hatchling.build"
 
 [tool.rye]
 managed = true
-dev-dependencies = ["ruff>=0.5.1", "opencv-python>=4.10.0.84"]
+dev-dependencies = [
+    "ruff>=0.11.2",
+    "opencv-python>=4.11.0.86",
+    "watchdog>=6.0.0",
+]
 
 [tool.hatch.metadata]
 allow-direct-references = true

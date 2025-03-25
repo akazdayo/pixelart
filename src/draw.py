@@ -2,7 +2,6 @@ import streamlit as st
 import streamlit.components.v1 as components
 import os
 import numpy as np
-import pandas as pd
 from PIL import Image
 
 
@@ -85,8 +84,8 @@ class Web:
 
         with st.expander("More Options", True):
             self.more_options()
-        # with st.expander("Custom Palette"):
-        #    self.custom_palette()
+        with st.expander("Custom Palette"):
+            self.custom_palette()
         with st.expander("Experimental Features"):
             self.experimental()
 
@@ -160,7 +159,8 @@ class Web:
             The following features are experimental and subject to errors and bugs.
             """)
         st.title("AI")
-        self.color_number = st.slider("AI Color", 1, 20, 8, 1, help="Number of colors")
+        self.color_number = st.slider(
+            "AI Color", 1, 20, 8, 1, help="Number of colors")
         self.ai_iter = st.slider(
             "AI Number of attempts",
             1,
@@ -177,7 +177,8 @@ class Web:
 
     def more_options(self):
         st.title("Anime Filter")
-        st.write("Simultaneous application of the Canny and DoG filters is deprecated.")
+        st.write(
+            "Simultaneous application of the Canny and DoG filters is deprecated.")
 
         st.subheader("DoG Filter")
         self.px_dog_filter = st.checkbox("Pixel DoG Filter", True)
@@ -186,7 +187,8 @@ class Web:
         self.morphology = st.checkbox("Morphology Filter", False)
         self.kuwahara = st.checkbox("Kuwahara Filter", False)
         self.median = st.checkbox("Median Filter", False)
-        self.delete_transparent = st.checkbox("Delete transparent color", False)
+        self.delete_transparent = st.checkbox(
+            "Delete transparent color", False)
 
         st.title("Convert Setting")
         self.no_expand = st.checkbox("No Expand Image")

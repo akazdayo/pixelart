@@ -30,7 +30,7 @@ class Convert:
         # https://github.com/akazdayo/pixelart-modules
         changed = cast(
             NDArray[np.uint64],
-            pm.convert(img, np.array(color_palette, dtype=np.uint64)),
+            pm.convert(img, np.array(color_palette, dtype=np.uint64)), # type: ignore
         )
         return changed
 
