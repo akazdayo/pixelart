@@ -30,7 +30,8 @@ class AI:
         unique_colors = len(unique_counts)
         return unique_colors
 
-    def lab2rgb(self, image):
+    @staticmethod
+    def lab2rgb(image):
         # LAB色空間が入った配列
         lab_array = np.array(image, dtype=np.uint8)
 

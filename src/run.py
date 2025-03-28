@@ -6,6 +6,7 @@ import src.convert as convert
 import src.filters as filters
 import src.draw as draw
 import base64
+import numpy as np
 
 warning_message = """
 The size of the image has been reduced because the file size is too large.\n
@@ -47,8 +48,16 @@ def main():
 
     encoded_img = cv_to_base64(cv2.cvtColor(cimg, cv2.COLOR_BGR2RGB))
 
-    web.col1.image(
-        f"data:image/png;base64,{encoded_img}", use_container_width=True)
+    web.col1.image(f"data:image/png;base64,{encoded_img}", use_container_width=True)
+
+    # Alphaチャンネルを分離
+    # アルファチャンネルを分離
+    cimg = cimg[:, :, :3]
+    alpha = []
+    if len(img[0][0]) == 4:
+        alpha = img[:, :, 3]
+
+    cimg = cv2.cvtColor(cimg, cv2.COLOR_BGR2Lab)
 
     if web.saturation != 1:
         cimg = enhance.saturation(cimg, web.saturation)
@@ -93,8 +102,7 @@ def main():
         if web.color == "Custom Palette" or web.color == "AI":
             if web.color == "AI":
                 web.now.write("### AI Palette in progress")
-                ai_color = ai_palette.get_color(
-                    cimg, web.color_number, web.ai_iter)
+                ai_color = ai_palette.get_color(cimg, web.color_number, web.ai_iter)
 
                 with st.expander("AI Palette"):
                     web.custom_palette(ai_color)
@@ -107,12 +115,15 @@ def main():
             cimg = conv.convert(cimg, web.color)
 
     if not web.no_expand:
-        cimg = cv2.resize(
-            cimg, img.shape[:2][::-1], interpolation=cv2.INTER_NEAREST)
+        cimg = cv2.resize(cimg, img.shape[:2][::-1], interpolation=cv2.INTER_NEAREST)
 
     if web.decreaseColor:
         web.now.write("### Decrease Color in progress")
         cimg = enhance.decrease(cimg)
+
+    # アルファチャンネルを結合して返す
+    if len(img[0][0]) == 4:
+        cimg = np.dstack([cimg, alpha])
 
     if web.delete_alpha:
         web.now.write("### Delete Alpha in progress")
@@ -126,10 +137,8 @@ def main():
     cimg_rgb = cv2.cvtColor(cimg, cv2.COLOR_BGR2RGB)
     encoded_img = cv_to_base64(cimg_rgb)
 
-    web.col2.image(
-        f"data:image/png;base64,{encoded_img}", use_container_width=True)
-    st.sidebar.image(
-        f"data:image/png;base64,{encoded_img}", use_container_width=True)
+    web.col2.image(f"data:image/png;base64,{encoded_img}", use_container_width=True)
+    st.sidebar.image(f"data:image/png;base64,{encoded_img}", use_container_width=True)
     web.now.write("")
     del conv.color_dict
     gc.collect()

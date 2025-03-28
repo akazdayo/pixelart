@@ -8,34 +8,6 @@ class EdgeFilter:
     def __init__(self) -> None:
         pass
 
-    def canny(self, image, th1, th2):
-        # アルファチャンネルを分離
-        bgr = image[:, :, :3]
-        alpha = []
-        if len(image[0][0]) == 4:
-            alpha = image[:, :, 3]
-
-        # グレースケール変換
-        gray = cv2.cvtColor(bgr, cv2.COLOR_BGR2GRAY)
-
-        # ぼかしでノイズ低減
-        edge = cv2.blur(gray, (3, 3))
-
-        # Cannyアルゴリズムで輪郭抽出
-        edge = cv2.Canny(edge, th1, th2, apertureSize=3)
-
-        # 輪郭画像をRGB色空間に変換
-        edge = cv2.cvtColor(edge, cv2.COLOR_GRAY2BGR)
-
-        # 差分を返す
-        result = cv2.subtract(bgr, edge)
-
-        # アルファチャンネルを結合して返す
-        if len(image[0][0]) == 4:
-            return np.dstack([result, alpha])
-        else:
-            return result
-
     def dog(self, img, scratch=False):
         def filter(img_array, size, p, sigma, eps, phi, k=1.6):
             eps /= 255
@@ -47,14 +19,10 @@ class EdgeFilter:
             e[e >= 1] = 1
             return e * 255
 
-        # アルファチャンネルを分離
-        base_image = img[:, :, :3]
-        alpha = []
-        if len(img[0][0]) == 4:
-            alpha = img[:, :, 3]
-        image = base_image.copy()
+        image = img.copy()
 
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        image = cv2.cvtColor(image, cv2.COLOR_Lab2RGB)
+        image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
 
         image = np.array(image, dtype=np.float64)
         image = filter(image, 17, 40, 1.4, 0, 15)
@@ -65,18 +33,15 @@ class EdgeFilter:
         )  # しきい値 二値化
         a = np.array(image, np.uint8)
         # a = self.morphology_dilate(a)
-        image = cv2.cvtColor(a, cv2.COLOR_GRAY2BGR)
+        image = cv2.cvtColor(a, cv2.COLOR_GRAY2RGB)
+        image = cv2.cvtColor(image, cv2.COLOR_RGB2Lab)
 
         if scratch:
             image = cv2.bitwise_not(image)
             image = self.morphology_erode(image)
-        result = cv2.subtract(base_image, image)
+        result = cv2.subtract(img, image)
 
-        # アルファチャンネルを結合して返す
-        if len(img[0][0]) == 4:
-            return np.dstack([result, alpha])
-        else:
-            return result
+        return result
 
     def morphology_dilate(self, image):
         dilate_kernel = np.ones((3, 3), np.uint8)
