@@ -53,6 +53,7 @@ class Web:
                 "pyxel",
                 "rainbow",
                 "warm",
+                "Custom Palette",
             ),
         )
 
@@ -86,8 +87,8 @@ class Web:
 
         with st.expander("More Options", True):
             self.more_options()
-        # with st.expander("Custom Palette"):
-        #    self.custom_palette()
+        with st.expander("Custom Palette"):
+            self.custom_palette()
         with st.expander("Experimental Features"):
             self.experimental()
 
