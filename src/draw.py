@@ -3,6 +3,7 @@ import streamlit.components.v1 as components
 import os
 import numpy as np
 from PIL import Image
+import uuid
 
 
 class Web:
@@ -140,16 +141,29 @@ class Web:
         return rgb_values[0] if len(rgb_values) == 1 else rgb_values
 
     def custom_palette(
-        self, colors=["#FF0000", "#00FF00", "#0000FF", "#FFFFFF", "#000000"]
+        self
     ):
+        if 'custom_img' not in st.session_state:
+            st.session_state.custom_img = False
+        if 'custom_palette' not in st.session_state and not st.session_state.custom_img:
+            st.session_state.custom_palette = [
+                '#431d48', '#f1c391', '#faf2d5', '#d68679', '#648db6', '#0d020f', '#ad5767', '#73376c']
+            print("session_state.custom_palette is not in session_state")
+
         """カスタムパレットを作成するUIを表示し、RGB値のリストを生成する"""
 
         st.title("Add Palette")
 
+        if st.button("Add Palette"):
+            # 新しいカラーピッカーを追加
+            new_color = f"#{uuid.uuid4().hex[:6]}"
+            st.session_state.custom_palette.append(new_color)
+
         # カスタムカラーピッカーUI
         color_inputs = []
-        for i, default_color in enumerate(colors):
-            color = st.color_picker(f"Color {i + 1}", default_color)
+        for i, default_color in enumerate(st.session_state.custom_palette):
+            color = st.color_picker(
+                f"Color {i + 1}", default_color)
             color_inputs.append(color)
 
         # RGB値のリストを生成

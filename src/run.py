@@ -4,7 +4,6 @@ import gc
 import src.ai as ai
 import src.convert as convert
 import src.filters as filters
-import src.draw as draw
 import base64
 
 warning_message = """
@@ -28,8 +27,11 @@ def main(web):
     enhance = filters.ImageEnhancer()
 
     if web.upload is not None:
+        st.session_state.custom_img = True
         img = web.get_image(web.upload)
+
     else:
+        st.session_state.custom_img = False
         img = web.get_image("sample/cat_and_dog.jpg")
 
     if img.ndim == 2:
@@ -90,13 +92,12 @@ def main(web):
 
     if not web.no_convert:
         if web.color == "Custom Palette" or web.color == "AI":
-            if web.color == "AI" and web.color != "Custom Palette":
+            if web.color == "AI" and web.color != "Custom Palette" and st.session_state.custom_img:
                 web.now.write("### AI Palette in progress")
                 ai_color = ai_palette.get_color(
                     cimg, web.color_number, web.ai_iter)
-
-                with st.expander("AI Palette"):
-                    web.custom_palette(ai_color)
+                print(ai_color)
+                st.session_state.custom_palette = ai_color
 
             web.now.write("### Color Convert in progress")
             cimg = conv.convert(cimg, "Custom", web.rgblist)
