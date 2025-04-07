@@ -12,6 +12,7 @@ dependencies = [
     "pillow>=11.1.0",
     "scikit-learn>=1.6.1",
     "pixelart-modules>=0.1.0",
+    "pandas>=2.2.3",
 ]
 readme = "README.md"
 requires-python = ">= 3.12"
