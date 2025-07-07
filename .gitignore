@@ -132,3 +132,4 @@ data/
 temp/
 images/
 output/
+.ruff_cache/
