@@ -5,7 +5,6 @@ import gc
 import src.ai as ai
 import src.convert as convert
 import src.filters as filters
-import src.draw as draw
 import base64
 
 warning_message = """
@@ -88,7 +87,24 @@ def main(web):
     else:
         cimg = enhance.grid_mosaic(cimg, web.pixel_grid)
 
+    # Apply dithering if enabled
+    if web.dithering:
+        web.now.write("### Applying dithering")
+        dither = filters.Dithering()
+
+        # Apply selected dithering method
+        if web.dithering_method == "Floyd-Steinberg":
+            cimg = dither.floyd_steinberg(cimg, web.dither_intensity)
+        elif web.dithering_method == "Ordered":
+            cimg = dither.ordered_dither(
+                cimg, web.dither_matrix_size, web.dither_intensity
+            )
+        elif web.dithering_method == "Atkinson":
+            cimg = dither.atkinson(cimg, web.dither_intensity)
+
     if not web.no_convert:
+        # Only apply color conversion if dithering is not enabled
+        # (dithering already handles color quantization)
         if web.color == "Custom Palette" or web.color == "AI":
             if web.color == "AI" and web.color != "Custom Palette":
                 web.now.write("### AI Palette in progress")
