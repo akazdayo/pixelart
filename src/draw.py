@@ -170,6 +170,23 @@ class Web:
         self.median = st.checkbox("Median Filter", False)
         self.delete_transparent = st.checkbox("Delete transparent color", False)
 
+        st.title("Dithering")
+        self.dithering = st.checkbox("Apply Dithering", False)
+        self.dithering_method = st.selectbox(
+            "Dithering Method",
+            ("Floyd-Steinberg", "Ordered", "Atkinson"),
+            disabled=not self.dithering,
+        )
+        if self.dithering_method == "Ordered":
+            self.dither_matrix_size = st.selectbox(
+                "Matrix Size", (2, 4, 8), index=1, disabled=not self.dithering
+            )
+        else:
+            self.dither_matrix_size = 4
+        self.dither_intensity = st.slider(
+            "Dithering Intensity", 0.0, 2.0, 1.0, 0.1, disabled=not self.dithering
+        )
+
         st.title("Convert Setting")
         self.no_expand = st.checkbox("No Expand Image")
         self.scratch = st.checkbox("Scratch Filter")
