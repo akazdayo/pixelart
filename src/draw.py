@@ -171,11 +171,12 @@ class Web:
         self.delete_transparent = st.checkbox("Delete transparent color", False)
 
         st.title("Dithering")
-        self.dithering = st.checkbox("Apply Dithering", False)
+        self.dithering = st.checkbox("Apply Dithering", True)
         self.dithering_method = st.selectbox(
             "Dithering Method",
             ("Floyd-Steinberg", "Ordered", "Atkinson"),
             disabled=not self.dithering,
+            index=1,
         )
         if self.dithering_method == "Ordered":
             self.dither_matrix_size = st.selectbox(
@@ -184,7 +185,12 @@ class Web:
         else:
             self.dither_matrix_size = 4
         self.dither_intensity = st.slider(
-            "Dithering Intensity", 0.0, 2.0, 1.0, 0.1, disabled=not self.dithering
+            "Dithering Intensity",
+            0.0,
+            2.0,
+            0.3,
+            0.1,
+            disabled=not self.dithering,
         )
 
         st.title("Convert Setting")
