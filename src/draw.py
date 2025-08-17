@@ -42,6 +42,8 @@ class Web:
                 "pyxel",
                 "rainbow",
                 "warm",
+                "wplace-premium",
+                "wplace-free",
                 "Custom Palette",
             ),
         )
@@ -105,6 +107,14 @@ class Web:
                 rgb_values.append(self.hex_to_rgb(hex_code[1:]))
         return rgb_values
 
+    def hex_to_bgr(self, hex_code):
+        """Hex カラーコードを BGR (OpenCV形式) に変換"""
+        hex_code = hex_code.replace("#", "")
+        r = int(hex_code[0:2], 16)
+        g = int(hex_code[2:4], 16)
+        b = int(hex_code[4:6], 16)
+        return (b, g, r)  # OpenCV は BGR 順
+
     def custom_palette(  # TODO: pandasからndarrayに変更したい
         self,
         df=pd.DataFrame(
@@ -155,6 +165,30 @@ class Web:
             "Delete Alpha Channel",
             False,
             help="Remove the image transparency except perfect transparency",
+        )
+
+        st.title("Grid Options")
+        self.enable_grid = st.checkbox("Enable Grid", False)
+        self.grid_line_thickness = st.slider(
+            "Grid Line Thickness",
+            1,
+            5,
+            1,
+            1,
+            disabled=not self.enable_grid,
+        )
+        self.grid_color = st.color_picker(
+            "Grid Color",
+            "#000000",
+            disabled=not self.enable_grid,
+        )
+        self.grid_opacity = st.slider(
+            "Grid Opacity",
+            0.1,
+            1.0,
+            0.5,
+            0.1,
+            disabled=not self.enable_grid,
         )
 
     def more_options(self):

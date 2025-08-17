@@ -182,6 +182,73 @@ class ImageEnhancer:
         return dst
 
 
+class GridMask:
+    def __init__(self) -> None:
+        pass
+
+    def add_grid(
+        self, image, grid_size, line_color=(0, 0, 0), line_thickness=1, opacity=0.5
+    ):
+        """
+        画像にグリッドマスクを追加する
+
+        Args:
+            image: 入力画像 (numpy array)
+            grid_size: グリッドのサイズ (ピクセル数)
+            line_color: グリッド線の色 (B, G, R)
+            line_thickness: 線の太さ
+            opacity: グリッドの透明度 (0.0-1.0)
+
+        Returns:
+            グリッド付きの画像
+        """
+        # アルファチャンネルを分離
+        has_alpha = len(image.shape) == 3 and image.shape[2] == 4
+        if has_alpha:
+            bgr = image[:, :, :3].copy()
+            alpha = image[:, :, 3]
+        else:
+            bgr = image.copy()
+
+        # データ型をuint8に確保
+        bgr = np.array(bgr, dtype=np.uint8)
+        h, w = bgr.shape[:2]
+
+        # 結果画像を元画像のコピーで初期化
+        result = bgr.copy()
+
+        # グリッド線を直接描画
+        # 縦線を描画
+        for x in range(0, w, grid_size):
+            if x > 0:  # 左端は描画しない
+                cv2.line(result, (x, 0), (x, h - 1), line_color, line_thickness)
+
+        # 横線を描画
+        for y in range(0, h, grid_size):
+            if y > 0:  # 上端は描画しない
+                cv2.line(result, (0, y), (w - 1, y), line_color, line_thickness)
+
+        # 透明度を適用する場合は、グリッド線部分だけブレンド
+        if opacity < 1.0:
+            # グリッド線が描画された部分を検出
+            diff = cv2.absdiff(bgr, result)
+            grid_mask = np.any(diff > 0, axis=2)
+
+            # 透明度を適用
+            for c in range(3):
+                result[:, :, c] = np.where(
+                    grid_mask,
+                    bgr[:, :, c] * (1 - opacity) + result[:, :, c] * opacity,
+                    bgr[:, :, c],
+                )
+
+        # アルファチャンネルを結合して返す
+        if has_alpha:
+            return np.dstack([result, alpha])
+        else:
+            return result
+
+
 class Dithering:
     def __init__(self) -> None:
         pass

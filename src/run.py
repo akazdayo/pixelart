@@ -26,6 +26,7 @@ def main(web):
     conv = convert.Convert()
     edges = filters.EdgeFilter()
     enhance = filters.ImageEnhancer()
+    grid_mask = filters.GridMask()
 
     if web.upload is not None:
         img = web.get_image(web.upload)
@@ -122,6 +123,25 @@ def main(web):
 
     if not web.no_expand:
         cimg = cv2.resize(cimg, img.shape[:2][::-1], interpolation=cv2.INTER_NEAREST)
+
+    # グリッドマスクを適用（リサイズ後）
+    if web.enable_grid:
+        web.now.write("### Adding Grid Mask")
+        # ピクセルサイズを取得
+        if web.pixel_dropdown == "Pixel Grid":
+            # リサイズ後のサイズでグリッド間隔を計算
+            grid_size = max(1, cimg.shape[0] // web.pixel_grid)
+        else:
+            # スライダーモードの場合は元画像サイズから計算
+            original_h = img.shape[0]
+            grid_size = max(1, int(original_h * web.slider))
+
+        # Hex カラーを BGR に変換
+        grid_color_bgr = web.hex_to_bgr(web.grid_color)
+
+        cimg = grid_mask.add_grid(
+            cimg, grid_size, grid_color_bgr, web.grid_line_thickness, web.grid_opacity
+        )
 
     if web.decreaseColor:
         web.now.write("### Decrease Color in progress")
