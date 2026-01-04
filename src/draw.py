@@ -193,9 +193,6 @@ class Web:
 
     def more_options(self):
         st.title("Anime Filter")
-        st.write("Simultaneous application of the Canny and DoG filters is deprecated.")
-
-        st.subheader("DoG Filter")
         self.px_dog_filter = st.checkbox("Pixel DoG Filter", True)
 
         st.title("Other Filters")
