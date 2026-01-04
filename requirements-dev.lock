@@ -25,12 +25,16 @@ charset-normalizer==3.4.1
     # via requests
 click==8.1.8
     # via streamlit
+coverage==7.13.1
+    # via pytest-cov
 gitdb==4.0.12
     # via gitpython
 gitpython==3.1.44
     # via streamlit
 idna==3.10
     # via requests
+iniconfig==2.3.0
+    # via pytest
 jinja2==3.1.6
     # via altair
     # via pydeck
@@ -60,6 +64,7 @@ opencv-python-headless==4.12.0.88
     # via pixelart
 packaging==24.2
     # via altair
+    # via pytest
     # via streamlit
 pandas==2.2.3
     # via pixelart
@@ -69,12 +74,20 @@ pillow==11.3.0
     # via streamlit
 pixelart-modules==0.1.0
     # via pixelart
+pluggy==1.6.0
+    # via pytest
+    # via pytest-cov
 protobuf==5.29.4
     # via streamlit
 pyarrow==19.0.1
     # via streamlit
 pydeck==0.9.1
     # via streamlit
+pygments==2.19.2
+    # via pytest
+pytest==9.0.2
+    # via pytest-cov
+pytest-cov==7.0.0
 python-dateutil==2.9.0.post0
     # via pandas
 pytz==2025.2

@@ -46,17 +46,11 @@ class Convert:
     def delete_alpha(self, image):
         # 画像がアルファチャンネルを持っているか確認
         if image.shape[2] == 4:
-            b = image[:, :, 0]
-            g = image[:, :, 1]
-            r = image[:, :, 2]
+            bgr = image[:, :, :3]
             a = image[:, :, 3]
-            conv_a = a.copy()
-            for i, x in enumerate(a):
-                for j, y in enumerate(x):
-                    if y != 0:
-                        conv_a[i][j] = 255
-
-            merged = cv2.merge([b, g, r, conv_a])
+            # ベクトル化: 0以外の値を255に変換
+            conv_a = np.where(a != 0, 255, a).astype(np.uint8)
+            merged = cv2.merge([bgr[:, :, 0], bgr[:, :, 1], bgr[:, :, 2], conv_a])
             return merged
         else:
             # アルファチャンネルがない場合はそのまま返す
@@ -65,18 +59,12 @@ class Convert:
     def delete_transparent_color(self, image):
         # 画像がアルファチャンネルを持っているか確認
         if image.shape[2] == 4:
-            b = image[:, :, 0]
-            g = image[:, :, 1]
-            r = image[:, :, 2]
+            bgr = image[:, :, :3].copy()
             a = image[:, :, 3]
-            for i, x in enumerate(a):
-                for j, y in enumerate(x):
-                    if y == 0:
-                        b[i][j] = 255
-                        g[i][j] = 255
-                        r[i][j] = 255
-
-            merged = cv2.merge([b, g, r, a])
+            # ベクトル化: アルファが0のピクセルを白(255)に変換
+            mask = a == 0
+            bgr[mask] = [255, 255, 255]
+            merged = cv2.merge([bgr[:, :, 0], bgr[:, :, 1], bgr[:, :, 2], a])
             return merged
         else:
             # アルファチャンネルがない場合はそのまま返す

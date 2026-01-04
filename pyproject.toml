@@ -27,7 +27,13 @@ dev-dependencies = [
     "ruff>=0.12.2",
     "opencv-python>=4.11.0.86",
     "watchdog>=6.0.0",
+    "pytest>=8.0.0",
+    "pytest-cov>=4.1.0",
 ]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --cov=src --cov-report=term-missing"
 
 [tool.hatch.metadata]
 allow-direct-references = true
