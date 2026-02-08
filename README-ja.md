@@ -1,63 +1,56 @@
-# PixelArt-Converter
-Language : [English](README.md)  
-# 基本機能
-## color palette
-このサイトでは、色を変換しています。  
-色を変換するときに使用するカラーパレットを選択します。  
-Pyxelは[Pyxel](https://github.com/kitao/pyxel)というゲームライブラリで使用されている色です。  
-![Color palette](./image/palette.png)
-### AI Palette
-KMeansを使用して入力された画像専用のパレットを作成します。  
-https://pixabay.com/vectors/homes-the-needle-village-mountains-8194751/
-![AI](./image/ai.jpg)
-## Mosaic ratio
-0.01ずつ調整できるスライダーで、数字が少なくなるほどドットが大きくなります。
-![Select ratio](./image/ratio.png)
+# PixelArt Converter
 
-## Custom palette
-Colorpaletteを自分で作成できます。  
-表の中にパレットに追加したい色をカラーコードで入力します。  
-表に入力した色は右側に表示されます。  
-表の上にあるカラーピッカーから色を選択してカラーコードをコピーし、入力すると楽です。  
-※スポイトには対応していません
-![Custom palette](./image/custom.png)
+Language: [English](README.md)
 
-## Tweet
-ツイッターにツイートするボタンです。  
-画像の添付には対応していません。  
-※画像を添付する際、画像のコピーまたは画像をダウンロードして添付してください  
-※トラッカーブロックをオフにしないと表示されない可能性があります。  
+画像をアップロードするだけで、細かくカスタマイズ可能なピクセルアートに変換できる Web アプリです。  
 
-# More Options
-## Anime Filter
-エッジを追加します。  
-アニメっぽくなるかもしれないです。
-![animefilter_on](./image/ai.jpg)
-![animefilter_off](./image/noanime.jpg)
-### threhsold
-AnimeFilter(エッジ処理)の値です。  
-値が小さいほどエッジが多くなります。  
-#### threhsold 1
-エッジの量を指定します。
-#### threhsold 2
-エッジの長さを指定します。
+- Demo: https://pixelart.streamlit.app
+- Python: 3.12
+- License: Apache-2.0
 
-## No Color Convert
-カラーパレットを使用しないようにします。  
-![no_convert](./image/no_convert.jpg)
+![PixelArt Converter](./image/sample.png)
 
-## decrease Color
-減色処理をします。  
-基本的には、``No Color Convert``と同時に使用します。
-![decrease_color](./image/decrease.jpg)
+## 特徴
 
-# Experimental Features
-まだ正式な機能ではないので、バグや、エラーが発生する可能性があります。  
-## AI
-### AI Color
-AIカラーパレットを使用しているときに使う色の数を変更します。
+- パレット生成
+  入力画像に合わせたパレットを自動生成（色数・反復回数を調整可能）
+- カスタムパレット  
+  HEX カラーコードを入力して任意パレットを作成
+- フィルタと画質調整  
+  Pixel DoG, Morphology, Kuwahara, Median, Scratch, 彩度/明るさ/コントラスト/シャープネス
+- ディザリング  
+  Floyd-Steinberg / Ordered / Atkinson
+- 後処理オプション  
+  Delete transparent color, Delete Alpha Channel, Enable Grid, No Expand Image, No Color Convert, decrease Color
+
+## スクリーンショット
+| 変換後 | 元画像 |
+| --- | --- |
+| ![converted 名主の滝公園](./image/名主の滝公園/converted.png) | ![base 名主の滝公園](./image/名主の滝公園/base.jpg) |
+
+## セットアップ
+
+```bash
+nix develop
+uv run streamlit run main.py
+```
+
+または、ワンショット実行:
+
+```bash
+nix run .
+```
 
 
-# Color Sample
-デフォルトのカラーパレットに含まれている色を表示します  
-![color_sample](./image/sample.png)
+## 使い方
+
+1. 画像をアップロード
+2. ピクセル化方式を選択
+3. カラーパレットを選択
+4. 必要に応じてフィルタやディザリングを調整
+5. 変換結果を保存して利用
+
+
+## ライセンス
+
+Apache License 2.0。詳細は `LICENSE` を参照してください。

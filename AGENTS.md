@@ -1,285 +1,189 @@
 # AGENTS.md
 
-This file provides guidance to AI coding agents working with this repository.
+Guidance for agentic coding assistants working in this repository.
+Read this file before editing code.
 
-## Build/Lint/Test Commands
+## Rule Files (Cursor/Copilot)
 
-### Environment Setup
+As of 2026-02-08, no additional Cursor or Copilot instruction files are present:
+- `.cursorrules` (not found)
+- `.cursor/rules/` (not found)
+- `.github/copilot-instructions.md` (not found)
 
-```bash
-# Install dependencies and sync environment (requires rye)
-rye sync
+If any of these are added later, treat them as high-priority local rules.
+Update this file to reflect those rules before making broad changes.
 
-# Alternative: pip install
-pip install -r requirements.txt
+## Repository Quick Map
+
+```text
+pixelart/
+|- main.py                 # Streamlit entrypoint
+|- src/run.py              # main pipeline orchestration
+|- src/draw.py             # Streamlit UI and controls
+|- src/convert.py          # Rust wrapper + color conversion helpers
+|- src/filters.py          # filters, mosaic, grid mask, dithering
+|- src/ai.py               # KMeans palette generation
+|- pages/                  # Streamlit subpages
+|- color/*.csv             # RGB palette files
+|- tests/test_convert.py   # pytest coverage for Convert class
+|- pyproject.toml          # deps, lint/test/build config
 ```
 
-### Running the Application
+## Environment and Setup
+
+Preferred toolchain is `uv`.
 
 ```bash
-# Run the Streamlit application
-rye run streamlit run main.py
+# install project + dev dependencies
+uv sync --dev
 
-# Alternative without rye
-streamlit run main.py
+# run any tool in the project environment
+uv run <command>
 ```
 
-### Linting and Formatting
+Optional Nix workflow (repo includes `flake.nix`):
 
 ```bash
-# Run linter on all source files
-rye run ruff check src/ pages/ main.py
-
-# Run linter on a specific file
-rye run ruff check src/convert.py
-
-# Auto-fix linting issues
-rye run ruff check --fix src/
-
-# Format all code
-rye run ruff format src/ pages/ main.py
-
-# Format a specific file
-rye run ruff format src/convert.py
+nix develop
 ```
 
-### Type Checking
+Python requirement: `>=3.12`.
+
+## Build / Lint / Test Commands
+
+### Run app
 
 ```bash
-# Run pyright for type checking
-rye run pyright src/
+uv run streamlit run main.py
 ```
 
-### Testing
-
-Currently no automated tests are implemented. The `test/` directory is empty.
+### Build distributions
 
 ```bash
-# When tests exist, they would be run with:
-rye run pytest
+uv build
+uv build --wheel
+```
 
-# Run a single test file
-rye run pytest tests/test_convert.py
+### Lint and format
 
-# Run a specific test function
-rye run pytest tests/test_convert.py::test_resize_image -v
+```bash
+uv run ruff check src/ pages/ tests/ main.py
+uv run ruff check src/convert.py
+uv run ruff check --fix src/ pages/ tests/ main.py
+uv run ruff format src/ pages/ tests/ main.py
+uv run ruff format src/filters.py
+```
+
+### Type checking
+
+`pyright` is configured in `pyproject.toml` but may not be installed.
+
+```bash
+uv run pyright src/
+uvx pyright src/
+```
+
+### Tests (pytest)
+
+Pytest defaults from `pyproject.toml`:
+- `testpaths = ["tests"]`
+- `addopts = "-v --cov=src --cov-report=term-missing"`
+
+```bash
+# run all tests
+uv run pytest
+
+# run a single test file
+uv run pytest tests/test_convert.py -v
+
+# run a single test class
+uv run pytest tests/test_convert.py::TestResizeImage -v
+
+# run a single test function (key pattern)
+uv run pytest tests/test_convert.py::TestResizeImage::test_resize_large_image -v
+
+# run a focused subset by keyword
+uv run pytest -k "resize or alpha" -v
+
+# skip coverage locally for faster iteration
+uv run pytest tests/test_convert.py::TestResizeImage::test_resize_large_image -v --no-cov
 ```
 
 ## Code Style Guidelines
 
-### Import Order
+### Imports
 
-Organize imports in three groups with no blank lines between groups:
+Use three import groups in this order:
+1. standard library
+2. third-party packages
+3. local project imports (`src.*`)
 
-1. Standard library imports
-2. Third-party imports
-3. Local/project imports
-
-```python
-import csv
-import os
-import gc
-import cv2
-import numpy as np
-import pandas as pd
-import streamlit as st
-from PIL import Image
-from sklearn.cluster import KMeans
-import src.convert as convert
-import src.filters as filters
-from numpy.typing import NDArray
-```
-
-Common aliases used in this project:
-- `numpy` as `np`
-- `streamlit` as `st`
-- `cv2` (OpenCV) - no alias
-- `pandas` as `pd`
-
-### Type Hints
-
-Type hints are used sparingly. Apply them in these cases:
-
-- `__init__` methods: `def __init__(self) -> None:`
-- Functions returning complex types: `def convert(...) -> NDArray[np.uint64]:`
-- Use `typing.cast` when needed for type safety
-
-```python
-from numpy.typing import NDArray
-from typing import cast
-
-def __init__(self) -> None:
-    pass
-
-def convert(self, img, option, custom=None) -> NDArray[np.uint64]:
-    changed = cast(NDArray[np.uint64], pm.convert(img, np.array(...)))
-    return changed
-```
-
-### Naming Conventions
-
-| Element    | Convention     | Examples                                    |
-|------------|----------------|---------------------------------------------|
-| Functions  | snake_case     | `file_dir()`, `hex_to_rgb()`, `get_image()` |
-| Variables  | snake_case     | `color_palette`, `img_array`, `rgb_values`  |
-| Classes    | PascalCase     | `Web`, `Convert`, `EdgeFilter`, `AI`        |
-| Constants  | snake_case     | `warning_message` (not UPPER_SNAKE_CASE)    |
-| Files      | snake_case     | `color_sample.py`, `how_to_use.py`          |
-
-Common abbreviations:
-- `img` for image
-- `conv` for convert/converter
-- `fdir` for file directory
+Keep import order changes minimal in untouched files.
+Common aliases in this repo: `np`, `pd`, `st`; keep `cv2` unaliased.
 
 ### Formatting
 
-- **Indentation**: 4 spaces
-- **Line length**: ~88-100 characters (ruff default)
-- **Quotes**: Double quotes preferred (`"string"`)
-- **Trailing commas**: Use in multi-line structures
+- Indentation: 4 spaces
+- Prefer double quotes
+- Keep lines around 88-100 chars
+- Use trailing commas in multiline literals/calls
+- Use `ruff format` for wrapping and whitespace
 
-```python
-st.set_page_config(
-    page_title="Pixelart-Converter",
-    page_icon="",
-    layout="centered",
-    initial_sidebar_state="expanded",
-)
-```
+### Type hints
 
-### Error Handling
+Type hints are partial in this codebase.
 
-Error handling is minimal in this codebase. Use explicit ValueError for critical errors:
+- Always annotate `__init__` with `-> None`
+- Add hints for complex return types (especially NumPy arrays)
+- Use `numpy.typing.NDArray` and `typing.cast` where useful
+- Do not mass-annotate legacy code unless needed for your change
 
-```python
-if not custom:
-    raise ValueError("Custom Palette is empty.")
-```
+### Naming conventions
 
-For image processing, use conditional checks rather than try/except:
+- Functions/variables: `snake_case`
+- Classes: `PascalCase`
+- Modules/files: `snake_case.py`
+- Constants are often `snake_case` in this repository
 
-```python
-# Check for alpha channel
-if image.shape[2] == 4:
-    # Handle RGBA image
-else:
-    # Handle RGB image
-```
+Common abbreviations: `img`, `conv`, `fdir`.
 
-### Docstrings
+### Error handling
 
-Use triple double-quotes with Japanese comments where appropriate:
+- Prefer explicit checks over broad `try/except`
+- Raise `ValueError` for invalid user input (e.g., empty custom palette)
+- Preserve RGB/RGBA behavior; do not silently drop alpha channels
 
-```python
-def add_grid(self, image, grid_size, line_color=(0, 0, 0), line_thickness=1, opacity=0.5):
-    """
-    Add a grid mask to the image
+### Comments and docstrings
 
-    Args:
-        image: Input image (numpy array)
-        grid_size: Grid size in pixels
-        line_color: Grid line color (B, G, R)
-        line_thickness: Line thickness
-        opacity: Grid opacity (0.0-1.0)
+- Keep comments brief; explain only non-obvious logic
+- English and Japanese comments both exist; follow local style in touched files
+- Use triple double-quoted docstrings when adding function docs
 
-    Returns:
-        Image with grid overlay
-    """
-```
+### Structure patterns
 
-### Class Structure
+- Classes group related behavior (`Convert`, `EdgeFilter`, `ImageEnhancer`)
+- Empty `__init__` is acceptable when consistent with nearby code
+- Prefer small helper methods over deep inheritance
 
-Classes are used to group related functions. Initialize with empty `__init__`:
+## Image Processing Conventions
 
-```python
-class EdgeFilter:
-    def __init__(self) -> None:
-        pass
+- OpenCV arrays are BGR (not RGB)
+- Palette CSV files store RGB values
+- Handle alpha channels explicitly (`shape[2] == 4`)
+- Preserve transparent-pixel semantics used in `src/convert.py`
+- Resize very large images toward FullHD budget before heavy processing
 
-    def canny(self, image, th1, th2):
-        # Implementation
-        pass
-```
+## Testing Expectations
 
-## Architecture Notes
+- If you touch `src/convert.py`, run targeted tests in `tests/test_convert.py`
+- If you touch filters or color logic, run all tests
+- Keep tests deterministic when practical (small synthetic NumPy fixtures)
+- Add or update tests for bug fixes and behavior changes
 
-### Project Structure
+## Agent Checklist Before Finishing
 
-```
-pixelart/
-├── main.py           # Entry point
-├── src/
-│   ├── draw.py       # Web UI class (Streamlit interface)
-│   ├── run.py        # Main processing pipeline
-│   ├── convert.py    # Image conversion (wraps Rust module)
-│   ├── filters.py    # Image preprocessing filters
-│   └── ai.py         # KMeans color palette generation
-├── pages/            # Additional Streamlit pages
-├── color/            # CSV color palettes (RGB values)
-└── sample/           # Sample images
-```
-
-### Key Dependencies
-
-- **pixelart-modules**: Rust library for core conversion (`pip install pixelart-modules`)
-- **streamlit**: Web framework for the UI
-- **opencv-python-headless**: Image processing (use `cv2`)
-- **scikit-learn**: KMeans clustering for AI palette
-
-### Image Processing Pipeline
-
-1. Input validation and resize (if > FullHD resolution)
-2. Apply preprocessing filters (DoG, morphology, Kuwahara, median)
-3. Apply image enhancements (saturation, brightness, contrast, sharpness)
-4. Mosaic/pixelation
-5. Color palette mapping via Rust module
-6. Post-processing (alpha channel, grid overlay, dithering)
-
-### Color Format Notes
-
-- OpenCV uses BGR format (not RGB)
-- Color palettes stored as RGB in CSV files
-- Alpha channel handling: Check `image.shape[2] == 4` for RGBA
-
-### Performance Considerations
-
-- Large images (>2,073,600 pixels) are automatically resized
-- Call `gc.collect()` after heavy processing
-- Core conversion uses Rust for performance
-
-## Common Patterns
-
-### Alpha Channel Handling
-
-```python
-# Separate alpha channel before processing
-has_alpha = len(image.shape) == 3 and image.shape[2] == 4
-if has_alpha:
-    bgr = image[:, :, :3].copy()
-    alpha = image[:, :, 3]
-else:
-    bgr = image.copy()
-
-# ... process bgr ...
-
-# Merge alpha channel back
-if has_alpha:
-    return np.dstack([result, alpha])
-else:
-    return result
-```
-
-### Hex to RGB Conversion
-
-```python
-def hex_to_rgb(self, hex_code):
-    hex_code = hex_code.replace("#", "")
-    r = int(hex_code[0:2], 16)
-    g = int(hex_code[2:4], 16)
-    b = int(hex_code[4:6], 16)
-    return [r, g, b]
-```
-
-## Python Version
-
-Requires Python >= 3.12 (specified in pyproject.toml).
+1. Run `uv run ruff check src/ pages/ tests/ main.py`.
+2. Run relevant pytest command(s), ideally including a single-test node.
+3. If tests cannot run, report exact failure and missing dependency.
+4. Keep edits minimal and aligned with existing architecture.
+5. Mention changed files and any follow-up verification steps.
