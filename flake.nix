@@ -22,21 +22,18 @@
       inputs.pyproject-nix.follows = "pyproject-nix";
       inputs.uv2nix.follows = "uv2nix";
     };
-
   };
 
-  outputs =
-    {
-      self,
-      nixpkgs,
-      utils,
-      pyproject-nix,
-      uv2nix,
-      pyproject-build-systems,
-    }:
+  outputs = {
+    self,
+    nixpkgs,
+    utils,
+    pyproject-nix,
+    uv2nix,
+    pyproject-build-systems,
+  }:
     utils.lib.eachDefaultSystem (
-      system:
-      let
+      system: let
         pkgs = nixpkgs.legacyPackages.${system};
         lib = pkgs.lib;
 
@@ -54,36 +51,46 @@
           (pkgs.callPackage pyproject-nix.build.packages {
             inherit python;
           }).overrideScope
-            (
-              lib.composeManyExtensions [
-                pyproject-build-systems.overlays.wheel
-                overlay
-              ]
-            );
+          (
+            lib.composeManyExtensions [
+              pyproject-build-systems.overlays.wheel
+              overlay
+            ]
+          );
 
         streamlitEnv = pythonSet.mkVirtualEnv "pixelart-env" {
-          streamlit = [ ];
-          opencv-python-headless = [ ];
-          numpy = [ ];
-          pillow = [ ];
-          scikit-learn = [ ];
-          pixelart-modules = [ ];
-          pandas = [ ];
+          streamlit = [];
+          opencv-python-headless = [];
+          numpy = [];
+          pillow = [];
+          scikit-learn = [];
+          pixelart-modules = [];
+          pandas = [];
+          pytest = [];
+          "pytest-cov" = [];
         };
 
         mainRunner = pkgs.writeShellApplication {
           name = "main";
-          runtimeInputs = [ streamlitEnv ];
+          runtimeInputs = [streamlitEnv];
           text = ''
             cd "${./.}"
             exec streamlit run main.py "$@"
           '';
         };
-      in
-      {
+
+        testRunner = pkgs.writeShellApplication {
+          name = "test";
+          runtimeInputs = [streamlitEnv];
+          text = ''
+            exec pytest "$@"
+          '';
+        };
+      in {
         packages = {
           default = mainRunner;
           env = streamlitEnv;
+          test = testRunner;
         };
 
         apps = {
@@ -91,11 +98,16 @@
             type = "app";
             program = "${mainRunner}/bin/main";
           };
+          test = {
+            type = "app";
+            program = "${testRunner}/bin/test";
+          };
         };
 
         devShells.default = pkgs.mkShell {
           packages = [
             pkgs.uv
+            pkgs.alejandra
             streamlitEnv
           ];
 
