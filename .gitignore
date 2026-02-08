@@ -133,3 +133,6 @@ temp/
 images/
 output/
 .ruff_cache/
+
+.direnv
+.envrc
