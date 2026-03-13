@@ -1,166 +1,112 @@
-import streamlit as st
+from typing import cast
 import cv2
+import numpy as np
 import pandas as pd
-import gc
-import src.ai as ai
-import src.convert as convert
-import src.filters as filters
-import base64
+import streamlit as st
+from numpy.typing import NDArray
+from pixelart_backend.pipeline import ProcessingOptions, cv_to_base64, process_image
 
 warning_message = """
 The size of the image has been reduced because the file size is too large.\n
 Image size is reduced if the number of pixels exceeds FullHD (2,073,600).
 """
 
-
-def cv_to_base64(img):
-    _, encoded = cv2.imencode(".png", img)
-    img_str = base64.b64encode(encoded).decode("ascii")
-
-    return img_str
+MAX_PIXELS = 2_073_600
 
 
 def main(web):
-    # instance
-    ai_palette = ai.AI()
-    conv = convert.Convert()
-    edges = filters.EdgeFilter()
-    enhance = filters.ImageEnhancer()
-    grid_mask = filters.GridMask()
-
     if web.upload is not None:
         img = web.get_image(web.upload)
     else:
         img = web.get_image("sample/cat_and_dog.jpg")
 
     if img.ndim == 2:
-        img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+        img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
     height, width = img.shape[:2]
-    if height * width < 2073600:
-        pass
-    else:
-        img = conv.resize_image(img)
+    if height * width > MAX_PIXELS:
         web.message.warning(warning_message)
 
-    cimg = img.copy()
     del web.upload
 
-    encoded_img = cv_to_base64(cv2.cvtColor(cimg, cv2.COLOR_BGR2RGB))
-
-    web.col1.image(f"data:image/png;base64,{encoded_img}", width="stretch")
-
-    if web.saturation != 1:
-        cimg = enhance.saturation(cimg, web.saturation)
-
-    if web.brightness != 1:
-        cimg = enhance.brightness(cimg, web.brightness)
-
-    if web.contrast != 1:
-        cimg = enhance.contrast(cimg, web.contrast)
-
-    if web.sharpness != 1:
-        cimg = enhance.sharpness(cimg, web.sharpness)
-
-    if web.delete_transparent:
-        cimg = conv.delete_transparent_color(cimg)
-
-    if web.scratch:
-        cimg = edges.dog(cimg, True)
-
-    if web.median:
-        cimg = edges.median(cimg, 15)
-
-    if web.kuwahara:
-        cimg = edges.apply_kuwahara(cimg)
-
-    if web.px_dog_filter and not web.scratch:
-        web.now.write("### Pixel Edge in progress")
-        cimg = edges.dog(cimg)
-
-    if web.morphology and not web.scratch:
-        # MorphologyとScratchは同時適用するとキモくなる
-        cimg = edges.morphology_erode(cimg)
-
-    web.now.write("### Now mosaic")
-    # cimg = enhance.mosaic(cimg, web.slider)
-    if web.pixel_dropdown == "Slider":
-        cimg = enhance.slider_mosaic(cimg, web.slider)
-    else:
-        cimg = enhance.grid_mosaic(cimg, web.pixel_grid)
-
-    # Apply dithering if enabled
-    if web.dithering:
-        web.now.write("### Applying dithering")
-        dither = filters.Dithering()
-
-        # Apply selected dithering method
-        if web.dithering_method == "Floyd-Steinberg":
-            cimg = dither.floyd_steinberg(cimg, web.dither_intensity)
-        elif web.dithering_method == "Ordered":
-            cimg = dither.ordered_dither(
-                cimg, web.dither_matrix_size, web.dither_intensity
-            )
-        elif web.dithering_method == "Atkinson":
-            cimg = dither.atkinson(cimg, web.dither_intensity)
-
-    if not web.no_convert:
-        # Only apply color conversion if dithering is not enabled
-        # (dithering already handles color quantization)
-        if web.color == "Custom Palette" or web.color == "AI":
-            if web.color == "AI" and web.color != "Custom Palette":
-                web.now.write("### AI Palette in progress")
-                ai_color = ai_palette.get_color(cimg, web.color_number, web.ai_iter)
-
-                with st.expander("AI Palette"):
-                    web.custom_palette(pd.DataFrame({"hex": c} for c in ai_color))
-
-            web.now.write("### Color Convert in progress")
-            cimg = conv.convert(cimg, "Custom", web.rgblist)
-
-        else:
-            web.now.write("### Color Convert in progress")
-            cimg = conv.convert(cimg, web.color)
-
-    if not web.no_expand:
-        cimg = cv2.resize(cimg, img.shape[:2][::-1], interpolation=cv2.INTER_NEAREST)
-
-    # グリッドマスクを適用（リサイズ後）
-    if web.enable_grid:
-        web.now.write("### Adding Grid Mask")
-        # ピクセルサイズを取得
-        if web.pixel_dropdown == "Pixel Grid":
-            # リサイズ後のサイズでグリッド間隔を計算
-            grid_size = max(1, cimg.shape[0] // web.pixel_grid)
-        else:
-            # スライダーモードの場合は元画像サイズから計算
-            original_h = img.shape[0]
-            grid_size = max(1, int(original_h * web.slider))
-
-        # Hex カラーを BGR に変換
-        grid_color_bgr = web.hex_to_bgr(web.grid_color)
-
-        cimg = grid_mask.add_grid(
-            cimg, grid_size, grid_color_bgr, web.grid_line_thickness, web.grid_opacity
+    if img.ndim == 3 and img.shape[2] == 4:
+        orig_for_encode = cast(
+            NDArray[np.uint8],
+            cv2.cvtColor(img, cv2.COLOR_RGBA2BGRA),
         )
+    else:
+        orig_for_encode = cast(
+            NDArray[np.uint8],
+            cv2.cvtColor(img, cv2.COLOR_RGB2BGR),
+        )
+    encoded_orig = cv_to_base64(orig_for_encode)
+    web.col1.image(f"data:image/png;base64,{encoded_orig}", width="stretch")
 
-    if web.decreaseColor:
-        web.now.write("### Decrease Color in progress")
-        cimg = enhance.decrease(cimg)
+    palette = web.color
+    if palette == "Custom Palette":
+        palette = "Custom"
 
-    if web.delete_alpha:
-        web.now.write("### Delete Alpha in progress")
-        cimg = conv.delete_alpha(cimg)
+    mosaic_mode = "slider" if web.pixel_dropdown == "Slider" else "grid"
+    grid_line_color = (
+        tuple(web.hex_to_rgb(web.grid_color)) if web.enable_grid else (0, 0, 0)
+    )
 
-    encoded_img = cv_to_base64(cimg)
+    opts = ProcessingOptions(
+        palette=palette,
+        custom_palette=web.rgblist if palette == "Custom" else [],
+        no_convert=web.no_convert,
+        ai_colors=web.color_number,
+        ai_iterations=web.ai_iter,
+        mosaic_mode=mosaic_mode,
+        slider_ratio=web.slider,
+        grid_size=web.pixel_grid,
+        no_expand=web.no_expand,
+        dog_filter=web.px_dog_filter,
+        scratch=web.scratch,
+        morphology=web.morphology,
+        kuwahara=web.kuwahara,
+        median=web.median,
+        delete_transparent=web.delete_transparent,
+        saturation=web.saturation,
+        brightness=web.brightness,
+        contrast=web.contrast,
+        sharpness=web.sharpness,
+        dithering=web.dithering,
+        dithering_method=web.dithering_method,
+        dither_matrix_size=web.dither_matrix_size,
+        dither_intensity=web.dither_intensity,
+        decrease_color=web.decreaseColor,
+        delete_alpha=web.delete_alpha,
+        enable_grid=web.enable_grid,
+        grid_line_color=grid_line_color,
+        grid_line_thickness=web.grid_line_thickness,
+        grid_opacity=web.grid_opacity,
+    )
 
-    # Convert BGR to RGB
+    web.now.write("### Processing...")
+    result = process_image(img, opts)
+
+    if result.was_resized:
+        web.message.warning(warning_message)
+
+    if result.ai_hex_colors is not None:
+        with st.expander("AI Palette"):
+            web.custom_palette(pd.DataFrame({"hex": c} for c in result.ai_hex_colors))
+
+    cimg = result.image
     if cimg.dtype != "uint8":
-        cimg = cv2.convertScaleAbs(cimg)
-    cimg_rgb = cv2.cvtColor(cimg, cv2.COLOR_BGR2RGB)
-    encoded_img = cv_to_base64(cimg_rgb)
+        cimg = cast(NDArray[np.uint8], cv2.convertScaleAbs(cimg))
+    if cimg.ndim == 3 and cimg.shape[2] == 4:
+        cimg_for_encode = cast(
+            NDArray[np.uint8],
+            cv2.cvtColor(cimg, cv2.COLOR_RGBA2BGRA),
+        )
+    else:
+        cimg_for_encode = cast(
+            NDArray[np.uint8],
+            cv2.cvtColor(cimg, cv2.COLOR_RGB2BGR),
+        )
+    encoded_img = cv_to_base64(cimg_for_encode)
 
     web.col2.image(f"data:image/png;base64,{encoded_img}", width="stretch")
     st.sidebar.image(f"data:image/png;base64,{encoded_img}", width="stretch")
     web.now.write("")
-    del conv.color_dict
-    gc.collect()
