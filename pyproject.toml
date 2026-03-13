@@ -32,13 +32,16 @@ dev = [
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-v --cov=src --cov-report=term-missing"
+addopts = "-v --cov=pixelart_backend --cov-report=term-missing"
 
 [tool.hatch.metadata]
 allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/pixelart"]
+packages = ["src/pixelart", "pixelart_backend"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"color" = "pixelart_backend/color"
 
 [tool.pyright]
 venvPath = "."

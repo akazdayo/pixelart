@@ -1,7 +1,8 @@
 import numpy as np
 import pytest
-from src.convert import Convert
-
+from pathlib import Path
+from unittest.mock import MagicMock, patch
+from pixelart_backend.convert import Convert, list_palette_names, load_palette_rows, PALETTE_SUFFIX
 
 class TestConvert:
     """Convert クラスのユニットテスト"""
@@ -249,3 +250,277 @@ class TestDeleteTransparentColor(TestConvert):
         assert np.all(result[5:, :, 0] == 50)
         assert np.all(result[5:, :, 1] == 100)
         assert np.all(result[5:, :, 2] == 150)
+
+
+class TestCandidatePaths:
+    """_candidate_paths() のテスト"""
+
+    def test_empty_string_raises_file_not_found(self):
+        """空文字列で FileNotFoundError が発生すること"""
+        with pytest.raises(FileNotFoundError):
+            Convert._candidate_paths("")
+
+    def test_whitespace_only_raises_file_not_found(self):
+        """空白文字のみで FileNotFoundError が発生すること"""
+        with pytest.raises(FileNotFoundError):
+            Convert._candidate_paths("   ")
+
+
+class TestCsvStems:
+    """_csv_stems() のテスト"""
+
+    def test_csv_stems_returns_names(self):
+        """CSV ファイルの stem が返されること"""
+        mock_files = []
+        for name in ["pyxel.csv", "cold.csv", "readme.txt"]:
+            f = MagicMock()
+            f.is_file.return_value = True
+            f.name = name
+            mock_files.append(f)
+        # ディレクトリ
+        d = MagicMock()
+        d.is_file.return_value = False
+        d.name = "subdir"
+        mock_files.append(d)
+
+        result = Convert._csv_stems(mock_files)
+        assert "pyxel" in result
+        assert "cold" in result
+        # .txt は含まれない
+        assert "readme" not in result
+        # ディレクトリは含まれない
+        assert "subdir" not in result
+
+    def test_csv_stems_empty_list(self):
+        """空リストで空リストが返されること"""
+        result = Convert._csv_stems([])
+        assert result == []
+
+
+class TestListColorPalettes:
+    """list_color_palettes() のテスト"""
+
+    def test_list_color_palettes_returns_tuple(self):
+        """タプルが返されること"""
+        result = Convert.list_color_palettes()
+        assert isinstance(result, tuple)
+
+    def test_list_color_palettes_includes_pyxel(self):
+        """pyxel が含まれること"""
+        result = Convert.list_color_palettes()
+        assert "pyxel" in result
+
+    def test_list_color_palettes_includes_known_palettes(self):
+        """既知のパレットが含まれること"""
+        result = Convert.list_color_palettes()
+        for name in ["cold", "gold", "pale", "pastel", "warm", "rainbow"]:
+            assert name in result
+
+    def test_list_color_palettes_sorted(self):
+        """ソートされて返されること"""
+        result = Convert.list_color_palettes()
+        assert result == tuple(sorted(result))
+
+    def test_list_color_palettes_package_color_dir_not_exist(self):
+        """package の color/ ディレクトリが存在しない場合でも動作すること"""
+        with patch("pixelart_backend.convert.files") as mock_files:
+            mock_package_root = MagicMock()
+            mock_package_color = MagicMock()
+            mock_package_color.is_dir.return_value = False
+            mock_package_root.joinpath.return_value = mock_package_color
+            mock_files.return_value = mock_package_root
+            result = Convert.list_color_palettes()
+            assert isinstance(result, tuple)
+            # project の color/ からは取得できるので空ではない
+            assert len(result) > 0
+
+    def test_list_color_palettes_package_color_dir_exists(self):
+        """package の color/ ディレクトリが存在する場合にパレットが追加されること"""
+        with patch("pixelart_backend.convert.files") as mock_files:
+            # package color dir has CSV files
+            mock_csv_file = MagicMock()
+            mock_csv_file.is_file.return_value = True
+            mock_csv_file.name = "pkg_only.csv"
+
+            mock_package_color = MagicMock()
+            mock_package_color.is_dir.return_value = True
+            mock_package_color.iterdir.return_value = iter([mock_csv_file])
+
+            mock_package_root = MagicMock()
+            mock_package_root.joinpath.return_value = mock_package_color
+            mock_files.return_value = mock_package_root
+
+            result = Convert.list_color_palettes()
+            assert isinstance(result, tuple)
+            assert "pkg_only" in result
+
+
+class TestResolvePalettePathFallbacks(TestConvert):
+    """_resolve_palette_path() のフォールバックパスのテスト"""
+
+    def test_resolve_via_package_resource(self):
+        """パッケージリソースから解決できること (line 72)"""
+        with patch("pixelart_backend.convert.files") as mock_files:
+            mock_resource = MagicMock()
+            mock_resource.is_file.return_value = True
+            mock_package_root = MagicMock()
+            mock_package_root.joinpath.return_value = mock_resource
+            mock_files.return_value = mock_package_root
+            # 直接パスは存在しないように設定
+            with patch.object(Path, "is_file", return_value=False):
+                result = Convert._resolve_palette_path("some_palette.csv")
+                assert result is mock_resource
+
+    def test_resolve_via_project_root_fallback(self):
+        """プロジェクトルートのフォールバックで解決できること (line 76)"""
+        # _resolve_palette_path は candidates を順に試す
+        # 「直接パス」と「パッケージリソース」が見つからず、「プロジェクトルート」で見つかるケース
+        project_root = Path(__file__).resolve().parent.parent
+        # pyxel.csv はプロジェクトの color/ にある
+        # candidate "pyxel.csv" → direct_path(pyxel.csv).is_file() = False (CWD に pyxel.csv はない)
+        # → package_root.joinpath("pyxel.csv").is_file() = False
+        # → project_root / "pyxel.csv" → False
+        # → project_root / "color" / "pyxel.csv" → True (line 81 ではなく)
+        # candidate "color/pyxel.csv" → direct_path(color/pyxel.csv).is_file() = True
+        # ↑ CWD がプロジェクトルートなので直接パスで見つかってしまう
+        #
+        # project_root フォールバック (line 76) を叩くには:
+        # direct_path も package_root も見つからない、が project_root / candidate で見つかるケース
+        with patch("pixelart_backend.convert.files") as mock_files:
+            mock_resource = MagicMock()
+            mock_resource.is_file.return_value = False
+            mock_package_root = MagicMock()
+            mock_package_root.joinpath.return_value = mock_resource
+            mock_files.return_value = mock_package_root
+
+            call_count = [0]
+            orig_is_file = Path.is_file
+
+            def selective_is_file(self_path):
+                s = str(self_path)
+                # 直接パスは見つからない
+                if s == "color/pyxel.csv" or s == "pyxel.csv":
+                    return False
+                return orig_is_file(self_path)
+
+            with patch.object(Path, "is_file", selective_is_file):
+                result = Convert._resolve_palette_path("color/pyxel.csv")
+                # project_root / "color/pyxel.csv" で解決される
+                assert Path(str(result)).name == "pyxel.csv"
+
+
+class TestResolvePalettePathInjection(TestConvert):
+    """_resolve_palette_path() のテスト (injectable roots)"""
+
+    def test_resolve_via_injected_project_root(self, tmp_path):
+        """_project_root を注入してプロジェクトルートフォールバックで解決できること"""
+        color_dir = tmp_path / "color"
+        color_dir.mkdir()
+        csv_file = color_dir / "test_pal.csv"
+        csv_file.write_text("0,0,0")
+
+        mock_pkg = MagicMock()
+        mock_pkg.joinpath.return_value = MagicMock(is_file=MagicMock(return_value=False))
+
+        result = Convert._resolve_palette_path(
+            "color/test_pal.csv",
+            _project_root=tmp_path,
+            _package_root=mock_pkg,
+        )
+        assert str(result).endswith("test_pal.csv")
+
+    def test_resolve_via_injected_package_root(self, tmp_path):
+        """_package_root を注入してパッケージリソースで解決できること"""
+        color_dir = tmp_path / "color"
+        color_dir.mkdir()
+        csv_file = color_dir / "pkg_pal.csv"
+        csv_file.write_text("255,0,0")
+
+        mock_pkg = MagicMock()
+        mock_resource = MagicMock()
+        mock_resource.is_file.return_value = True
+        mock_pkg.joinpath.return_value = mock_resource
+
+        # direct path won't exist; package_root.joinpath will find it
+        result = Convert._resolve_palette_path(
+            "color/pkg_pal.csv",
+            _project_root=tmp_path / "nonexistent",
+            _package_root=mock_pkg,
+        )
+        assert result is mock_resource
+
+    def test_resolve_not_found_with_injection(self, tmp_path):
+        """injectable roots でも見つからない場合は FileNotFoundError"""
+        mock_pkg = MagicMock()
+        mock_pkg.joinpath.return_value = MagicMock(is_file=MagicMock(return_value=False))
+
+        with pytest.raises(FileNotFoundError):
+            Convert._resolve_palette_path(
+                "nonexistent.csv",
+                _project_root=tmp_path,
+                _package_root=mock_pkg,
+            )
+
+
+class TestDoubleSuffixBug(TestConvert):
+    """.csv.csv 二重サフィックスバグの回帰テスト"""
+
+    def test_convert_with_csv_suffix_no_double(self, converter, rgb_image):
+        """パレット名に .csv が付いていても .csv.csv にならないこと"""
+        # pyxel.csv should resolve correctly, not look for pyxel.csv.csv
+        result = converter.convert(rgb_image, "pyxel.csv")
+        assert result.shape == rgb_image.shape
+
+    def test_convert_without_csv_suffix(self, converter, rgb_image):
+        """.csv なしのパレット名でも動作すること"""
+        result = converter.convert(rgb_image, "pyxel")
+        assert result.shape == rgb_image.shape
+
+
+class TestDeleteAlphaNonMutating(TestConvert):
+    """delete_alpha() が入力を変更しないことのテスト"""
+
+    def test_delete_alpha_does_not_mutate_input(self, converter):
+        """入力画像が変更されないこと"""
+        image = np.zeros((10, 10, 4), dtype=np.uint8)
+        image[:, :, 0] = 100
+        image[:, :, 1] = 150
+        image[:, :, 2] = 200
+        image[:, :, 3] = 128
+        original = image.copy()
+
+        converter.delete_alpha(image)
+
+        np.testing.assert_array_equal(image, original)
+
+class TestModuleLevelFunctions:
+    """モジュールレベル関数のテスト"""
+
+    def test_list_palette_names_returns_tuple(self):
+        """list_palette_names() がタプルを返すこと"""
+        result = list_palette_names()
+        assert isinstance(result, tuple)
+        assert "pyxel" in result
+
+    def test_list_palette_names_matches_class_method(self):
+        """list_palette_names() が Convert.list_color_palettes() と同じ結果を返すこと"""
+        assert list_palette_names() == Convert.list_color_palettes()
+
+    def test_load_palette_rows_with_suffix(self):
+        """load_palette_rows() が .csv 付きで動作すること"""
+        result = load_palette_rows("pyxel.csv")
+        assert isinstance(result, list)
+        assert len(result) == 16
+
+    def test_load_palette_rows_without_suffix(self):
+        """load_palette_rows() が .csv なしで動作すること"""
+        result = load_palette_rows("pyxel")
+        assert isinstance(result, list)
+        assert len(result) == 16
+
+    def test_load_palette_rows_rgb_values(self):
+        """load_palette_rows() が正しい RGB 値を返すこと"""
+        result = load_palette_rows("pyxel")
+        for row in result:
+            assert len(row) == 3
+            assert all(0 <= v <= 255 for v in row)
