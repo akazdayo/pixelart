@@ -19,6 +19,24 @@
           packages = [
             pkgs.uv
           ];
+
+          buildInputs = [
+            pkgs.libxcb
+            pkgs.zlib
+            pkgs.stdenv.cc.cc.lib
+            pkgs.libGL
+            pkgs.glib
+          ];
+
+          shellHook = ''
+            export LD_LIBRARY_PATH="${pkgs.lib.makeLibraryPath [
+              pkgs.libxcb
+              pkgs.zlib
+              pkgs.stdenv.cc.cc.lib
+              pkgs.libGL
+              pkgs.glib
+            ]}:$LD_LIBRARY_PATH"
+          '';
         };
       }
     );
