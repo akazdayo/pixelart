@@ -15,7 +15,7 @@ dependencies = [
     "pandas>=2.2.3",
 ]
 readme = "README.md"
-requires-python = ">= 3.12"
+requires-python = ">= 3.10"
 
 [build-system]
 requires = ["hatchling"]
